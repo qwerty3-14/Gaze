@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{76095F68-78E2-47C3-A059-2E473F6C1741}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ProjectGaze</RootNamespace>
+    <AssemblyName>ProjectGaze</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MonoGamePlatform>Windows</MonoGamePlatform>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Windows\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\$(MonoGamePlatform)\$(Platform)\$(Configuration)\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AssetManager.cs" />
+    <Compile Include="Beam.cs" />
+    <Compile Include="Circle.cs" />
+    <Compile Include="CollisionEvent.cs" />
+    <Compile Include="Controls.cs" />
+    <Compile Include="Effect.cs" />
+    <Compile Include="Entities\Entity.cs" />
+    <Compile Include="Entities\Planet.cs" />
+    <Compile Include="Entities\Projectiles\Blotch.cs" />
+    <Compile Include="Entities\Projectiles\Capsule.cs" />
+    <Compile Include="Entities\Projectiles\EMP.cs" />
+    <Compile Include="Entities\Projectiles\Grapple.cs" />
+    <Compile Include="Entities\Projectiles\GreenPulse.cs" />
+    <Compile Include="Entities\Projectiles\HunterPelt.cs" />
+    <Compile Include="Entities\Projectiles\IllBolt.cs" />
+    <Compile Include="Entities\Projectiles\Inq.cs" />
+    <Compile Include="Entities\Projectiles\Kugelblitz.cs" />
+    <Compile Include="Entities\Projectiles\MarkOfStatehood.cs" />
+    <Compile Include="Entities\Projectiles\MechBolt.cs" />
+    <Compile Include="Entities\Projectiles\MicroMissile.cs" />
+    <Compile Include="Entities\Projectiles\Mine.cs" />
+    <Compile Include="Entities\Projectiles\Missile.cs" />
+    <Compile Include="Entities\Projectiles\PalShell.cs" />
+    <Compile Include="Entities\Projectiles\Projectile.cs" />
+    <Compile Include="Entities\Projectiles\PsuedostableVacum.cs" />
+    <Compile Include="Entities\Projectiles\Tripwire.cs" />
+    <Compile Include="Entities\Projectiles\TrooperWave.cs" />
+    <Compile Include="Entities\Projectiles\TwistedWormhole.cs" />
+    <Compile Include="Entities\Ships\Apocalypse.cs" />
+    <Compile Include="Entities\Ships\Assassin.cs" />
+    <Compile Include="Entities\Ships\Brute.cs" />
+    <Compile Include="Entities\Ships\Buccaneer.cs" />
+    <Compile Include="Entities\Ships\Conqueror.cs" />
+    <Compile Include="Entities\Ships\Eagle.cs" />
+    <Compile Include="Entities\Ships\Escort.cs" />
+    <Compile Include="Entities\Ships\Frigate.cs" />
+    <Compile Include="Entities\Ships\GalvinHunter.cs" />
+    <Compile Include="Entities\Ships\Illusioner.cs" />
+    <Compile Include="Entities\Ships\Lancer.cs" />
+    <Compile Include="Entities\Ships\Mechanic.cs" />
+    <Compile Include="Entities\Ships\Missionary.cs" />
+    <Compile Include="Entities\Ships\Palladin.cs" />
+    <Compile Include="Entities\Ships\Ship.cs" />
+    <Compile Include="Entities\Ships\Strafer.cs" />
+    <Compile Include="Entities\Ships\Trebeche.cs" />
+    <Compile Include="Entities\Ships\Trooper.cs" />
+    <Compile Include="Main.cs" />
+    <Compile Include="Line.cs" />
+    <Compile Include="MenuManager.cs" />
+    <Compile Include="Menus\BackToMainMenu.cs" />
+    <Compile Include="Menus\Disconnect.cs" />
+    <Compile Include="Menus\HostGame.cs" />
+    <Compile Include="Menus\JoinGame.cs" />
+    <Compile Include="Menus\MenuOption.cs" />
+    <Compile Include="Menus\MultiplayerToggle.cs" />
+    <Compile Include="Menus\Quit.cs" />
+    <Compile Include="Menus\Settings.cs" />
+    <Compile Include="Menus\StartNetPlay.cs" />
+    <Compile Include="Menus\StartQuickPlay.cs" />
+    <Compile Include="Menus\ToggleFullscreen.cs" />
+    <Compile Include="Networking.cs" />
+    <Compile Include="Particle.cs" />
+    <Compile Include="Polygon.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Functions.cs" />
+    <Compile Include="Shape.cs" />
+    <Compile Include="ShipStats.cs" />
+    <Compile Include="Turret.cs" />
+    <Compile Include="UI.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Lidgren.Network, Version=3.7.1.189, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\MonoGame\v3.0\Assemblies\Windows\Lidgren.Network.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework">
+      <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\Windows\MonoGame.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="SpriteFontPlus, Version=0.6.5.20, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <MonoGameContentReference Include="Content\Content.mgcb" />
+    <None Include="app.config" />
+    <None Include="app.manifest" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
