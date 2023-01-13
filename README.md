@@ -1,5 +1,5 @@
 # Gaze
-This is a Game I worked on in my Jr/Senior year of College, and became my senior project. It is heavily isnpired by the old star control games.
+This is a Game I worked on in my Jr/Senior year of College, and became my senior project. It is heavily inspired by the old star control games.
 
 The game uses Monogame framework with Myra helping with UI.
 
