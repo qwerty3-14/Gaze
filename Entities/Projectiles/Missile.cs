@@ -1,40 +1,41 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Ships;
+using GazeOGL.Entities.Ships;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     class Missile : Projectile
     {
         public Missile(Vector2 position, Vector2 velocity, int team = 0) : base(position, velocity, team)
         {
             damage = 6;
-            lifeTime = 8 * 60;
+            lifeTime = 10 * 60;
             health = 2;
             mass = 0;
             shape = new Polygon(new Vector2[]
             {
                 new Vector2(2, 2),
                 new Vector2(2, -2),
-                new Vector2(-7, -2),
-                new Vector2(-7, 2)
+                new Vector2(-9, -2),
+                new Vector2(-9, 2)
             });
         }
         int counter;
         float maxSpeed = 3.2f;
         float acceleration = 1f;
         float turnSpeed = (float)Math.PI / 360;
+        float finOut = 0f;
         public override void LocalUpdate()
         {
             counter++;
             if (counter % 4 == 0)
             {
-                new Particle(position + Functions.PolarVector(-4, rotation), 8, Color.Orange);
+                new Particle(position + Functions.PolarVector(-10, rotation), 8, Color.Orange);
             }
             if (counter > 60)
             {
@@ -54,7 +55,15 @@ namespace ProjectGaze.Entities.Projectiles
                 {
                     float ratio = ((float)(counter - 60) / 360f);
                     turnSpeed = (float)Math.PI / (360 - (ratio * 330));
-                    maxSpeed = 3.5f - (ratio * 1.5f);
+                    maxSpeed = 4.5f - (ratio * 2.5f);
+                }
+                if(finOut < 3f)
+                {
+                    finOut += 0.1f;
+                }
+                else
+                {
+                    finOut = 3f;
                 }
             }
             
@@ -71,7 +80,9 @@ namespace ProjectGaze.Entities.Projectiles
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[3], pos, null, null, new Vector2(8.5f, 2.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.extraEntities[8], pos, null, Color.White, rotation, new Vector2(10.5f, 2.5f -1f + finOut), Vector2.One, SpriteEffects.None, 0f);
+            spriteBatch.Draw(AssetManager.extraEntities[9], pos, null, Color.White, rotation, new Vector2(10.5f, 2.5f -2f - finOut), Vector2.One, SpriteEffects.None, 0f);
+            spriteBatch.Draw(AssetManager.projectiles[3], pos, null, Color.White, rotation, new Vector2(10.5f, 2.5f), Vector2.One, SpriteEffects.None, 0f);
         }
     }
 }

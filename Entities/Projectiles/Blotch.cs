@@ -1,13 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Ships;
+using GazeOGL.Entities.Ships;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     public class Blotch : Projectile
     {
@@ -44,8 +44,8 @@ namespace ProjectGaze.Entities.Projectiles
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[12], pos + Functions.PolarVector(4 * (float)Math.Cos(trigCounter), velocity.ToRotation() + (float)Math.PI / 2f), null, null, new Vector2(2f, 2f), rotation, Vector2.One, Color.White, 0, 0);
-            spriteBatch.Draw(AssetManager.projectiles[12], pos + Functions.PolarVector(-4 * (float)Math.Cos(trigCounter), velocity.ToRotation() + (float)Math.PI / 2f), null, null, new Vector2(2f, 2f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[12], pos + Functions.PolarVector(4 * (float)Math.Cos(trigCounter), velocity.ToRotation() + (float)Math.PI / 2f), null, Color.White, rotation, new Vector2(2f, 2f), Vector2.One, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[12], pos + Functions.PolarVector(-4 * (float)Math.Cos(trigCounter), velocity.ToRotation() + (float)Math.PI / 2f), null, Color.White, rotation, new Vector2(2f, 2f), Vector2.One, 0, 0);
         }
         public override void OnHit(Entity Victim)
         {

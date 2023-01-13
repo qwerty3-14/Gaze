@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Projectiles;
+using GazeOGL.Entities.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Ships
+namespace GazeOGL.Entities.Ships
 {
     public class Illusioner : Ship
     {
@@ -68,14 +68,14 @@ namespace ProjectGaze.Entities.Ships
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.ships[4], pos, null, null, new Vector2(5.5f, 4.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.ships[4], pos, null, Color.White, rotation, new Vector2(5.5f, 4.5f), Vector2.One, SpriteEffects.None, 0f);
         }
         int counter;
         
         public override void LocalUpdate()
         {
             ShipStats.GetStatsFor(ShipID.Illusioner, out _, out _, out _, out acceleration, out _, out turnSpeed);
-            if (!Controls.controlSpecial[team] && holdingSpecial)
+            if (!(npcSpecial || (team < 2 && Controls.controlSpecial[team])) && holdingSpecial)
             {
                 holdingSpecial = false;
                 Vector2[] positions = new Vector2[5];
@@ -85,19 +85,19 @@ namespace ProjectGaze.Entities.Ships
                     positions[i + 1] = position + Functions.PolarVector(50, (i / 4f) * 2f * (float)Math.PI);
                 }
                 int posIndex = 0;
-                if (Controls.controlShoot[team])
+                if ((npcDown || (team < 2 && Controls.controlDown[team])))
                 {
                     posIndex = 2;
                 }
-                if (Controls.controlRight[team])
+                if ((npcRight || (team < 2 && Controls.controlRight[team])))
                 {
                     posIndex = 1;
                 }
-                if (Controls.controlLeft[team])
+                if ((npcLeft || (team < 2 && Controls.controlLeft[team])))
                 {
                     posIndex = 3;
                 }
-                if (Controls.controlThrust[team])
+                if ((npcThrust || (team < 2 && Controls.controlThrust[team])))
                 {
                     posIndex = 4;
                 }
@@ -130,7 +130,7 @@ namespace ProjectGaze.Entities.Ships
             }
             for (int i = 0; i < illusions.Count; i++)
             {
-                if (!Main.entities.Contains(illusions[i]))
+                if (!Arena.entities.Contains(illusions[i]))
                 {
                     illusions.Remove(illusions[i]);
                 }
@@ -212,42 +212,43 @@ namespace ProjectGaze.Entities.Ships
                 switch (posIndex)
                 {
                     case 1:
-                        Controls.controlRight[team] = true;
+                        AI_cRight();
                         break;
                     case 2:
-                        Controls.controlShoot[team] = true;
+                        AI_cDown();
                         break;
                     case 3:
-                        Controls.controlLeft[team] = true;
+                        AI_cLeft();
                         break;
                     case 4:
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                         break;
                 }
             }
             else
             {
                 AI_ToMaxAngle = false;
-                
+                /*
                 if (!AI_Dodging && enemyShip != null && AI_ImpendingCollision(enemyShip, 60))
                 {
                     if (AI_ImpendingCollision(enemyShip, 10) && energy >= 6)
                     {
-                        Controls.controlSpecial[team] = true;
+                        AI_cSpecial();
                     }
                     else
                     {
 
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                         AI_Dodge(enemyShip);
                     }
                     AI_Dodging = true;
                 }
+                */
                 if (!AI_Dodging && AI_ImpendingBeamCollision(10))
                 {
                     if (energy >= 6)
                     {
-                        Controls.controlSpecial[team] = true;
+                        AI_cSpecial();
                         if(enemyShip is Strafer || enemyShip is Lancer)
                         {
                             AI_ToMaxAngle = true;
@@ -263,11 +264,11 @@ namespace ProjectGaze.Entities.Ships
                         {
                             if (energy >= 6)
                             {
-                                Controls.controlSpecial[team] = true;
+                                AI_cSpecial();
                             }
                             else
                             {
-                                Controls.controlThrust[team] = true;
+                                AI_cThrust();
                                 AI_Dodge(enemyProjectiles[i]);
                             }
                             AI_Dodging = true;
@@ -282,7 +283,7 @@ namespace ProjectGaze.Entities.Ships
 
                     if ((enemyPos - position).Length() > (6.5f * 30))
                     {
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                     }
                     if (illusions.Count > 1 && energy >= 8 && (enemyPos - position).Length() > (6.5f * 15))
                     {
@@ -291,7 +292,7 @@ namespace ProjectGaze.Entities.Ships
                         {
                             if (AI_TurnToward(aimAt) && (enemyPos - position).Length() < (6.5f * 30))
                             {
-                                Controls.controlShoot[team] = true;
+                                AI_cShoot();
                             }
                         }
                         else
@@ -303,7 +304,9 @@ namespace ProjectGaze.Entities.Ships
                     {
                         if (energy >= 8)
                         {
-                            AI_Kite(6.5f, (6.5f * 30));
+                            
+                            AI_Kite(6.5f, (6.5f * 38), 0, (float)Math.PI / 3f);
+                            
                         }
                         else
                         {
@@ -318,9 +321,9 @@ namespace ProjectGaze.Entities.Ships
                         }
                     }
                 }
-                if (illusions.Count < 2 && energy >= 6)
+                if (illusions.Count < 2 && energy >= 6 && !(enemyShip is Surge))
                 {
-                    Controls.controlSpecial[team] = true;
+                    AI_cSpecial();
                 }
             }
         }
@@ -347,7 +350,7 @@ namespace ProjectGaze.Entities.Ships
         }
         public override void LocalUpdate()
         {
-            if(!Main.entities.Contains(parent))
+            if(!Arena.entities.Contains(parent))
             {
                 Kill();
             }
@@ -368,8 +371,7 @@ namespace ProjectGaze.Entities.Ships
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.ships[4], pos, null, null, new Vector2(5.5f, 4.5f), rotation, Vector2.One, Color.White, 0, 0);
-            //Hitbox().Draw(spriteBatch, Color.Green);
+            spriteBatch.Draw(AssetManager.ships[4], pos, null, Color.White, rotation, new Vector2(5.5f, 4.5f), Vector2.One, SpriteEffects.None, 0f);
         }
     }
 }

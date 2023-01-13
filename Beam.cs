@@ -1,8 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities;
-using ProjectGaze.Entities.Projectiles;
-using ProjectGaze.Entities.Ships;
+using GazeOGL.Entities;
+using GazeOGL.Entities.Projectiles;
+using GazeOGL.Entities.Ships;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,17 +10,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze
+namespace GazeOGL
 {
     class Beam
     {
         Entity parent;
         Color color;
         float length;
-        int damage = 1;
+        public int damage = 1;
         int lifeTime = 10;
         int immunityFrames = 10;
-        public Beam(Entity parent, Color color, float length = 100, int lifeTime = 10, int immunityFrames = -1, int damage = 1)
+        float width = 1f;
+        public Beam(Entity parent, Color color, float length = 100, int lifeTime = 10, int immunityFrames = -1, int damage = 1, float width = 1)
         {
             this.parent = parent;
             this.color = color;
@@ -28,6 +29,7 @@ namespace ProjectGaze
             this.lifeTime = lifeTime;
             this.immunityFrames = immunityFrames;
             this.damage = damage;
+            this.width = width;
         }
         Vector2 position;
         float rotation;
@@ -55,11 +57,11 @@ namespace ProjectGaze
         {
             if (sLine != null)
             {
-                sLine.Draw(spriteBatch, color);
+                sLine.Draw(spriteBatch, color, width);
                 sLine = null;
                 return;
             }
-            GetLine().Draw(spriteBatch, color);
+            GetLine().Draw(spriteBatch, color, width);
         }
         Line sLine = null;
         List<Entity> hitThese = new List<Entity>();
@@ -68,17 +70,17 @@ namespace ProjectGaze
             Line line = GetLine();
             Vector2? closestHitSpot = null;
             Entity closestHitEntity = null;
-            for (int i = 0; i < Main.entities.Count; i++)
+            for (int i = 0; i < Arena.entities.Count; i++)
             {
-                if (Main.entities[i].health > 0 && Main.entities[i].team != parent.team)
+                if (Arena.entities[i].health > 0 && Arena.entities[i].team != parent.team)
                 {
-                    Shape[] hit = Main.entities[i].AllHitboxes();
+                    Shape[] hit = Arena.entities[i].AllHitboxes();
                     for (int k = 0; k < hit.Length; k++)
                     {
                         if (hit[k].Colliding(line))
                         {
 
-                            if (!(Main.entities[i] is Projectile))
+                            if (!(Arena.entities[i] is Projectile) || (Arena.entities[i].health > damage))
                             {
                                 Vector2? hitAt = line.GetFirstHit(hit[k]);
                                 if (hitAt != null)
@@ -86,14 +88,14 @@ namespace ProjectGaze
                                     if (closestHitSpot == null || ((position - (Vector2)hitAt).Length() < (position - (Vector2)closestHitSpot).Length()))
                                     {
                                         closestHitSpot = (Vector2)hitAt;
-                                        closestHitEntity = Main.entities[i];
+                                        closestHitEntity = Arena.entities[i];
                                     }
                                 }
 
                             }
                             else
                             {
-                                CollisionEvent.DamagingHit(Main.entities[i], damage, line.Rotation());
+                                CollisionEvent.DamagingHit(Arena.entities[i], damage, line.Rotation());
                             }
                             break;
                         }

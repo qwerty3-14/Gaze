@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     public class Capsule : Projectile
     {
@@ -36,7 +36,7 @@ namespace ProjectGaze.Entities.Projectiles
 
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[20], pos, null, null, new Vector2(8.5f, 2.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[20], pos, null, Color.White, rotation, new Vector2(8.5f, 2.5f), Vector2.One, SpriteEffects.None, 0f);
         }
         public override void OnKill()
         {
@@ -47,13 +47,16 @@ namespace ProjectGaze.Entities.Projectiles
     public class LingeringExplosion : Projectile
     {
         public const int radius = 40;
-        public LingeringExplosion(Vector2 position, Vector2 velocity, int team = 0) : base(position, velocity, team)
+        public const int radiusBig = 100;
+        bool big = false;
+        public LingeringExplosion(Vector2 position, Vector2 velocity, int team = 0, bool big = false) : base(position, velocity, team)
         {
+            this.big = big;
             damage = 0;
             health = -1;
             mass = 0;
-            lifeTime = 120;
-            shape = new Circle(Vector2.Zero, radius);
+            lifeTime = big ? 1200 : 150;
+            shape = new Circle(Vector2.Zero, big ? radiusBig : radius);
             invulnerable = true;
         }
         int counter = 0;
@@ -61,14 +64,20 @@ namespace ProjectGaze.Entities.Projectiles
         {
             counter++;
             float vel = 3;
-            int arms = 12;
-            for(int i =0; i < arms; i++)
+            int arms = 3;
+            if (!big || counter > 120)
             {
-                new Particle(position, (int)((float)radius/ vel), Color.Orange, Functions.PolarVector(vel, ((float)i / (float)arms) * (float)Math.PI * 2f + counter * 0.1f));
+                for (int i = 0; i < arms; i++)
+                {
+                    new Particle(position, (int)((float)(big ? radiusBig : radius) / vel), Color.Orange, Functions.PolarVector(vel, ((float)i / (float)arms) * (float)Math.PI * 2f + counter * 0.4f));
+                }
             }
-            if(counter % 10 == 0)
+            if (counter > (big ? 150 : 30))
             {
-                Functions.ProximityExplosion(new Circle(position, radius), 1, team);
+                if (counter % 12 == 0)
+                {
+                    Functions.ProximityExplosion(new Circle(position, big ? radiusBig : radius), 1, team);
+                }
             }
         }
     }

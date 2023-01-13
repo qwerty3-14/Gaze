@@ -1,13 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Projectiles;
+using GazeOGL.Entities.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Ships
+namespace GazeOGL.Entities.Ships
 {
     public class Buccaneer : Ship
     {
@@ -46,7 +46,8 @@ namespace ProjectGaze.Entities.Ships
                 float rot = (Functions.screenLoopAdjust(position, fakePos) - position).ToRotation();
                 for (float l = 0; l < length; l += 2)
                 {
-                    spriteBatch.Draw(AssetManager.projectiles[16], pos + Functions.PolarVector(l, rot), null, null, new Vector2(0, 1f), rot, Vector2.One, Color.White, 0, 0);
+                    spriteBatch.Draw(AssetManager.projectiles[16], pos + Functions.PolarVector(l, rot), null, Color.White, rot, new Vector2(0f, 1f), Vector2.One, SpriteEffects.None, 0f);
+                    //spriteBatch.Draw(AssetManager.projectiles[16], pos + Functions.PolarVector(l, rot), null, null, new Vector2(0, 1f), rot, Vector2.One, Color.White, 0, 0);
                 }
 
 
@@ -55,7 +56,7 @@ namespace ProjectGaze.Entities.Ships
             {
                 sword.Draw(spriteBatch, pos);
             }
-            spriteBatch.Draw(AssetManager.ships[11], pos, null, null, new Vector2(5.5f, 8f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.ships[11], pos, null, Color.White, rotation, new Vector2(5.5f, 8f), Vector2.One, SpriteEffects.None, 0f);
         }
         int shotCooldown = 0;
         public override void Shoot()
@@ -87,14 +88,14 @@ namespace ProjectGaze.Entities.Ships
         int counter = 0;
         public override void LocalUpdate()
         {
-            if(!Controls.controlSpecial[team])
+            if(!(npcSpecial || (team < 2 && Controls.controlSpecial[team])))
             {
                 justLaunched = false;
             }
             if(grapple != null)
             {
                 grapple.lifeTime = 2;
-                if (!Main.entities.Contains(grapple))
+                if (!Arena.entities.Contains(grapple))
                 {
                     grapple = null;
                 }
@@ -166,7 +167,7 @@ namespace ProjectGaze.Entities.Ships
                 {
                     if (AI_CollidingWithEntitiy(enemyProjectiles[i], swordArea))
                     {
-                        Controls.controlShoot[team] = true;
+                        AI_cShoot();
                     }
                 }
                 else if(!AI_Dodging)
@@ -175,7 +176,7 @@ namespace ProjectGaze.Entities.Ships
                     {
                         AI_Dodging = true;
                         AI_Dodge(enemyProjectiles[i]);
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                     }
                 }
             }
@@ -188,19 +189,19 @@ namespace ProjectGaze.Entities.Ships
                     if (dist < 70)
                     {
                         AI_TurnToward((enemyPos - position).ToRotation());
-                        for (int i = 0; i < Main.entities.Count; i++)
+                        for (int i = 0; i < Arena.entities.Count; i++)
                         {
-                            if (Main.entities[i].team != team && !(Main.entities[i] is Projectile))
+                            if (Arena.entities[i].team != team && !(Arena.entities[i] is Projectile))
                             {
-                                if (AI_CollidingWithEntitiy(Main.entities[i], swordArea))
+                                if (AI_CollidingWithEntitiy(Arena.entities[i], swordArea))
                                 {
-                                    Controls.controlShoot[team] = true;
+                                    AI_cShoot();
                                 }
                             }
                             AI_DefaultFlight(enemyShip, enemyPos);
                             if (!batteryDied)
                             {
-                                Controls.controlThrust[team] = false;
+                                AI_cThrust(true);
                             }
                         }
                     }
@@ -212,7 +213,7 @@ namespace ProjectGaze.Entities.Ships
                             {
                                 if (dist < (Functions.screenLoopAdjust(position, grapple.position) - position).Length())
                                 {
-                                    Controls.controlSpecial[team] = true;
+                                    AI_cSpecial();
                                 }
                             }
                             AI_DefaultFlight(enemyShip, enemyPos);
@@ -230,7 +231,7 @@ namespace ProjectGaze.Entities.Ships
                                 {
                                     if (AI_TurnToward(aimToward))
                                     {
-                                        Controls.controlSpecial[team] = true;
+                                        AI_cSpecial();
                                     }
                                 }
                                 else
@@ -270,7 +271,7 @@ namespace ProjectGaze.Entities.Ships
                 {
                     if (grapple.IsStuck())
                     {
-                        Controls.controlSpecial[team] = true;
+                        AI_cSpecial();
                     }
                 }
                 float s = (float)maxSpeed * 0.2f;
@@ -280,7 +281,7 @@ namespace ProjectGaze.Entities.Ships
                     aimToward = (enemyPos - position).ToRotation();
                 }
                 AI_TurnToward(aimToward);
-                Controls.controlThrust[team] = true;
+                AI_cThrust();
             }
 
         }

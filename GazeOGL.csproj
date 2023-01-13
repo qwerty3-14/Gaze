@@ -1,0 +1,130 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <TieredCompilation>false</TieredCompilation>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Icon.ico" />
+    <None Remove="Icon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Icon.ico" />
+    <EmbeddedResource Include="Icon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <MonoGameContentReference Include="Content\Content.mgcb" />
+  </ItemGroup>
+  <ItemGroup>
+    <TrimmerRootAssembly Include="Microsoft.Xna.Framework.Content.ContentTypeReader" Visible="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="LiteNetLib" Version="1.0.0-rc.2" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />
+    <PackageReference Include="MonoSound" Version="1.5.2" />
+    <PackageReference Include="Myra" Version="1.3.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Content">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\Roboto-Light.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\Sprites\Apocalypse.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\ApocalypseEyelids.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\ApocalypseTurret.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\ApocalypseWithTurret.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Assassin.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\BlankPortrait.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Blotch.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Brute.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Buccaneer.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\BuccaneerWithSword.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Capsule.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Conqueror.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\ConquerorEngine.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\ConquerorHit.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\ConquerorNoEngines.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Cursor.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Eagle.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\EagleAnimated.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Eaglet.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Emitter.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\EMP.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\EMPBlast.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Escort.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\EscortCore.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\EscortPlatform.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\EscortPlatformDebris.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\EscortTurret.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Frigate.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Grapple.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\GrappleChain.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\GreenPulse.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Hunter.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\HunterPelt.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\IllBolt.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Illusioner.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Inq.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\KineticShield.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Kugelblitz.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\KugelCrash.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Lancer.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\LightningAnchor.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\MarkOfStatehood.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Mechanic.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\MechShot.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\MicroMissile.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Mine.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Missile.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\MissileFinLeft.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\MissileFinRight.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Missionary.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\MissionaryTurret.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\MissionaryWithTurrets.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Palladin.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\PalShell.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Planet.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\PsuedostableVacum.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\RepairBeam.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\ShellSplash.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\SlideInUIBox.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Strafer.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\StraferTurret.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\StraferWithTurrets.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Surge.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\SurgeWithLightning.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Sword.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Trebuchet.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\TrebuchetWithTurret.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\TrebuchetTurret.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\TripwireLink.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\TripwireTips.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\Trooper.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\TropperWave.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\TwistedWormhole.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\UIBottom.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Content\Sprites\UISide.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\EnergyIcon.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\EnergyUnit_Old.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\EnergyUnit.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\LifeIcon.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\LifeUnit_Old.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\LifeUnit.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\MenuBox.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\Selector.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\Selector2.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\SideBar.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\StatBar_Old.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\StatBar.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Sprites\X.png">  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+  </ItemGroup>
+</Project>

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     public class MarkOfStatehood : Projectile
     {
@@ -22,11 +22,11 @@ namespace ProjectGaze.Entities.Projectiles
                 new Vector2(-3.5f, -3.5f)
              });
             mass = 0f;
-            lifeTime = 30;
+            lifeTime = 35;
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[11], pos, null, null, new Vector2(3.5f, 3.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[11], pos, null, Color.White, rotation, new Vector2(3.5f, 3.5f), Vector2.One, SpriteEffects.None, 0f);
         }
         public override void Expire()
         {

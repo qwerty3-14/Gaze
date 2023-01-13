@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Projectiles;
+using GazeOGL.Entities.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Ships
+namespace GazeOGL.Entities.Ships
 {
     public class Mechanic : Ship
     {
@@ -34,7 +34,7 @@ namespace ProjectGaze.Entities.Ships
             });
             mass = 6;
         }
-        int specialCountdown = 0;
+        public int specialCountdown = 0;
         public override void Special()
         {
             if(energy == energyCapacity)
@@ -89,11 +89,11 @@ namespace ProjectGaze.Entities.Ships
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            
-            spriteBatch.Draw(AssetManager.ships[14], pos, null, null, new Vector2(6.5f, 5.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.ships[14], pos, null, Color.White, rotation, new Vector2(6.5f, 5.5f), Vector2.One, SpriteEffects.None, 0f);
             if (specialCountdown > 0)
             {
-                spriteBatch.Draw(AssetManager.extraEntities[4], pos + Functions.PolarVector(16 * (float)Math.Abs((float)(specialCountdown - 45) / 45f) - 10, rotation), null, null, new Vector2(1.5f, 7.5f), rotation, Vector2.One, Color.White, 0, 0);
+                spriteBatch.Draw(AssetManager.extraEntities[4], pos + Functions.PolarVector(16 * (float)Math.Abs((float)(specialCountdown - 45) / 45f) - 10, rotation), null, Color.White, rotation, new Vector2(1.5f, 7.5f), Vector2.One, SpriteEffects.None, 0f);
+                //spriteBatch.Draw(AssetManager.extraEntities[4], pos + Functions.PolarVector(16 * (float)Math.Abs((float)(specialCountdown - 45) / 45f) - 10, rotation), null, null, new Vector2(1.5f, 7.5f), rotation, Vector2.One, Color.White, 0, 0);
             }
         }
         bool AI_BatteryHitZero = false;
@@ -109,38 +109,37 @@ namespace ProjectGaze.Entities.Ships
             {
                 if (AI_ImpendingCollision(enemyProjectiles[i], Math.Min(60, enemyProjectiles[i].lifeTime)))
                 {
-                    AI_ShootingProj = true;
-                    Controls.controlThrust[team] = true;
                     incomingDamage += enemyProjectiles[i].damage;
                     if (enemyProjectiles[i] is Tripwire)
                     {
                         incomingDamage += 10;
                         break;
                     }
-                    if (incomingDamage > health - 2)
+                    if (incomingDamage > health - 4)
                     {
                         break;
                     }
-                    AI_Dodge(enemyProjectiles[i]);
+                    //AI_Dodge(enemyProjectiles[i]);
                 }
             }
-            if (incomingDamage > health - 2 || enemyShip == null || (Functions.screenLoopAdjust(position, enemyShip.position) - position).Length() > 240)
+
+            if (incomingDamage > health - 4 || enemyShip == null || (Functions.screenLoopAdjust(position, enemyShip.position) - position).Length() > 240)
             {
                 for (int i = 0; i < enemyProjectiles.Count; i++)
                 {
-                    if (AI_ImpendingCollision(enemyProjectiles[i], Math.Min(60, enemyProjectiles[i].lifeTime)))
+                    if (AI_ImpendingCollision(enemyProjectiles[i], Math.Min(60, enemyProjectiles[i].lifeTime), out int ET))
                     {
                         AI_ShootingProj = true;
-                        Controls.controlThrust[team] = true;
-                        if(enemyProjectiles[i].health == 1 || enemyProjectiles[i].health == 2)
+                        AI_cThrust();
+                        if(enemyProjectiles[i].health == 1 || enemyProjectiles[i].health == 2 && energy > 2 && ET > 1.3f * Functions.AngularDifference((Functions.screenLoopAdjust(position, enemyProjectiles[i].position) - position).ToRotation(), rotation) / GetTurnSpeed())
                         {
                             Vector2 projPos = Functions.screenLoopAdjust(position, enemyProjectiles[i].position);
-                            float aimAt = Functions.PredictiveAim(position, 4.5f, projPos, enemyProjectiles[i].velocity - velocity);
+                            float aimAt = Functions.PredictiveAimWithOffset(position, 4.5f, projPos, enemyProjectiles[i].velocity - velocity, 3f);
                             if (!float.IsNaN(aimAt))
                             {
                                 if (AI_TurnToward(aimAt))
                                 {
-                                    Controls.controlShoot[team] = true;
+                                    AI_cShoot();
                                 }
                             }
                             else
@@ -161,7 +160,7 @@ namespace ProjectGaze.Entities.Ships
                 if(AI_ImpendingCollision(enemyShip, 60))
                 {
                     AI_ShootingProj = true;
-                    Controls.controlThrust[team] = true;
+                    AI_cThrust();
                     AI_Dodge(enemyShip);
                 }
             }*/
@@ -183,13 +182,13 @@ namespace ProjectGaze.Entities.Ships
                                 if (AI_ImpendingCollision(enemyProjectiles[i], Math.Min(60, enemyProjectiles[i].lifeTime)))
                                 {
                                     AI_ShootingProj = true;
-                                    Controls.controlThrust[team] = true;
+                                    AI_cThrust();
                                     AI_Dodge(enemyProjectiles[i]);
                                 }
                             }
-                            if (!AI_ShootingProj && specialCountdown == 0 && (enemyPos - position).Length() > 180)
+                            if (!AI_ShootingProj && specialCountdown == 0 && ((enemyPos - position).Length() > 180 || enemyShip is Trebeche))
                             {
-                                Controls.controlSpecial[team] = true;
+                                AI_cSpecial();
                             }
                         }
                         else
@@ -200,32 +199,39 @@ namespace ProjectGaze.Entities.Ships
                 }
                 else
                 {
+                    /*
                     if ((enemyPos - position).Length() < 4.5f * 22)
                     {
                         AI_Kite(4.5f, 4.5f * 30);
                     }
-                    else if ((enemyPos - position).Length() < 4.5f * 38)
+                    else*/
+                    if (AggressiveTargetting(position, 4.5f * 38, out Entity target))
                     {
-                        float aimAt = Functions.PredictiveAim(position, 4.5f, enemyPos, enemyVel - velocity);
+                        Vector2 targetPos = Functions.screenLoopAdjust(position, target.position);
+                        float aimAt = Functions.PredictiveAimWithOffset(position, 4.5f, targetPos, enemyVel - velocity, 3f);
                         if (!float.IsNaN(aimAt))
                         {
                             if (AI_TurnToward(aimAt))
                             {
-                                Controls.controlShoot[team] = true;
+                                AI_cShoot();
                             }
                         }
                         else
                         {
-                            AI_TurnToward(toward);
+                            AI_TurnToward((targetPos - position).ToRotation());
                         }
                     }
                     else
                     {
-                        Controls.controlThrust[team] = true;
-                        if(enemyShip is Strafer)
+                        if (health < healthMax)
+                        {
+                            AI_BatteryHitZero = true;
+                        }
+                        AI_cThrust();
+                        if (enemyShip is Strafer)
                         {
                             //AI_TurnToward((enemyPos + Functions.PolarVector(4.5f * 10, enemyShip.rotation + (float)Math.PI / 2f) - position).ToRotation());
-                            AI_Kite(4.5f, 4.5f * 30);
+                            AI_Kite(4.5f, 4.5f * 30, 3f);
                         }
                         else
                         {

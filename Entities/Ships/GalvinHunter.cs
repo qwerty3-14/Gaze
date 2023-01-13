@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Projectiles;
+using GazeOGL.Entities.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Ships
+namespace GazeOGL.Entities.Ships
 {
     class Hunter : Ship
     {
@@ -93,7 +93,7 @@ namespace ProjectGaze.Entities.Ships
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.ships[0], pos, null, null, new Vector2(7.5f, 5.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.ships[0], pos, null, Color.White, rotation, new Vector2(7.5f, 5.5f), Vector2.One, SpriteEffects.None, 0f);
         }
         bool AI_ShootingProj = false;
         bool rush = true;
@@ -116,7 +116,7 @@ namespace ProjectGaze.Entities.Ships
                         {
                             if (AI_TurnToward(aimAt))
                             {
-                                Controls.controlShoot[team] = true;
+                                AI_cShoot();
                             }
                         }
                     }
@@ -131,10 +131,16 @@ namespace ProjectGaze.Entities.Ships
                         {
                             if (AI_TurnToward(aimAt))
                             {
-                                Controls.controlShoot[team] = true;
+                                AI_cShoot();
                             }
                         }
                     }
+                }
+                else  if (AI_ImpendingCollision(enemyProjectiles[i], Math.Min(60, enemyProjectiles[i].lifeTime)))
+                {
+                    AI_ShootingProj = true;
+                    AI_Dodge(enemyProjectiles[i]);
+                    AI_cThrust();
                 }
             }
             if (enemyShip != null && !AI_ShootingProj)
@@ -145,14 +151,14 @@ namespace ProjectGaze.Entities.Ships
                 {
                     if ((enemyPos - position).Length() > 2.2f * 50)
                     {
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                     }
                     float aimAt = Functions.PredictiveAim(position, 3, enemyPos, enemyShip.velocity - velocity);
                     if (!float.IsNaN(aimAt))
                     {
                         if (AI_TurnToward(aimAt))
                         {
-                            Controls.controlShoot[team] = true;
+                            AI_cShoot();
                         }
                     }
                     else
@@ -164,11 +170,11 @@ namespace ProjectGaze.Entities.Ships
                 {
                     if (rush)
                     {
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                         AI_TurnToward(toward);
                         if (enemyShip.StunTime == 0 && (enemyPos - position).Length() > 120 && ((enemyPos + enemyShip.velocity) - position).Length() > (enemyPos - position).Length())
                         {
-                            Controls.controlSpecial[team] = true;
+                            AI_cSpecial();
                         }
                         if(energy < 2)
                         {
@@ -180,7 +186,7 @@ namespace ProjectGaze.Entities.Ships
                         AI_Kite(4, 3 * 50);
                         if (energy == energyCapacity)
                         {
-                            Controls.controlSpecial[team] = true;
+                            AI_cSpecial();
                             rush = true;
                         }
                     }
@@ -193,7 +199,11 @@ namespace ProjectGaze.Entities.Ships
                 }
                 if ((trapPosition - position).Length() < 3 * 30 && enemyShip.StunTime == 0)
                 {
-                    Controls.controlSpecial[team] = true;
+                    AI_cSpecial();
+                }
+                if(enemyShip is Conqueror && ((Conqueror)enemyShip).energy >= 8)
+                {
+                    AI_cSpecial(true);
                 }
             }
         }

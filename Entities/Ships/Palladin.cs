@@ -1,17 +1,18 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Projectiles;
+using GazeOGL.Entities.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Ships
+namespace GazeOGL.Entities.Ships
 {
     public class Palladin : Ship
     {
-        const int AuraMax = 180;
+        const int AuraMax = 170;
+        public const float Range = 3.7f * 30;
         public Palladin(Vector2 position, int team = 0) : base(position, team)
         {
             type = ShipID.Palladin;
@@ -56,13 +57,16 @@ namespace ProjectGaze.Entities.Ships
         }
         void PewPew()
         {
-            AssetManager.PlaySound(SoundID.SmallExplosion);
-            Projectile p = new PalShell(position + Functions.PolarVector(gunOffsets[shotIndex].X, rotation) + Functions.PolarVector(gunOffsets[shotIndex].Y, rotation + (float)Math.PI / 2), Functions.PolarVector(3.7f, rotation) + velocity, team);
-            p.rotation = rotation;
-            shotIndex++;
-            if (shotIndex > 3)
+            for (int i = 0; i < 1; i++)
             {
-                shotIndex = 0;
+                AssetManager.PlaySound(SoundID.SmallExplosion);
+                Projectile p = new PalShell(position + Functions.PolarVector(gunOffsets[shotIndex].X, rotation) + Functions.PolarVector(gunOffsets[shotIndex].Y, rotation + (float)Math.PI / 2), Functions.PolarVector(3.7f, rotation) + velocity, team);
+                p.rotation = rotation;
+                shotIndex++;
+                if (shotIndex > 3)
+                {
+                    shotIndex = 0;
+                }
             }
         }
         float auraRadius = 0;
@@ -75,7 +79,7 @@ namespace ProjectGaze.Entities.Ships
                 auraTime = 20;
                 if (auraRadius == 0)
                 {
-                    AssetManager.PlaySound(SoundID.CreateIllusion);
+                    AssetManager.PlaySound(SoundID.CreateIllusion, -0.3f);
                 }
             }
         }
@@ -86,20 +90,20 @@ namespace ProjectGaze.Entities.Ships
                 Circle c = new Circle(pos, auraRadius);
                 c.Draw(spriteBatch, new Color(0, 20, 80, 80));
             }
-            spriteBatch.Draw(AssetManager.ships[6], pos, null, null, new Vector2(16.5f, 11f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.ships[6], pos, null, Color.White, rotation, new Vector2(16.5f, 11f), Vector2.One, SpriteEffects.None, 0f);
         }
         void SlowingAura(Circle area)
         {
-            for (int i = 0; i < Main.entities.Count; i++)
+            for (int i = 0; i < Arena.entities.Count; i++)
             {
-                if (Main.entities[i].team != team)
+                if (Arena.entities[i].team != team)
                 {
-                    Shape[] col = Main.entities[i].AllHitboxes();
+                    Shape[] col = Arena.entities[i].AllHitboxes();
                     for (int k = 0; k < col.Length; k++)
                     {
                         if (col[k].Colliding(area))
                         {
-                            Main.entities[i].SlowTime = 2;
+                            Arena.entities[i].SlowTime = 2;
                             break;
                         }
                     }
@@ -125,7 +129,7 @@ namespace ProjectGaze.Entities.Ships
             {
                 if(auraRadius == AuraMax)
                 {
-                    AssetManager.PlaySound(SoundID.IllusionDown);
+                    AssetManager.PlaySound(SoundID.IllusionDown, -.3f);
                 }
                 if (auraRadius > 0)
                 {
@@ -192,7 +196,7 @@ namespace ProjectGaze.Entities.Ships
             Circle auraArea = new Circle(position, AuraMax);
             if (AI_CollidingWithEnemy(auraArea))
             {
-                Controls.controlSpecial[team] = true;
+                AI_cSpecial();
             }
             List<Projectile> enemyProjectiles = EnemyProjectiles();
             for (int i = 0; i < enemyProjectiles.Count; i++)
@@ -201,7 +205,7 @@ namespace ProjectGaze.Entities.Ships
                 {
                     if (AI_ImpendingCollision(enemyProjectiles[i], Math.Min(30, enemyProjectiles[i].lifeTime)))
                     {
-                        Controls.controlSpecial[team] = true;
+                        AI_cSpecial();
                         AI_ShootingProj = true;
                         Vector2 projVel = enemyProjectiles[i].velocity * (enemyProjectiles[i].SlowTime > 0 ? 0.5f : 1);
                         float aimAt = Functions.PredictiveAim(position, 3, enemyProjectiles[i].position, projVel - velocity);
@@ -209,7 +213,7 @@ namespace ProjectGaze.Entities.Ships
                         {
                             if (AI_TurnToward(aimAt))
                             {
-                                Controls.controlShoot[team] = true;
+                                AI_cShoot();
                             }
                         }
                     }
@@ -218,15 +222,20 @@ namespace ProjectGaze.Entities.Ships
                 {
                     if (AI_ImpendingCollision(enemyProjectiles[i], Math.Min(30, enemyProjectiles[i].lifeTime)))
                     {
-                        Controls.controlSpecial[team] = true;
+                        AI_cSpecial();
                         AI_ShootingProj = true;
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                         AI_Dodge(enemyProjectiles[i]);
                     }
                 }
             }
             if (enemyShip != null && !AI_ShootingProj)
             {
+                bool attemptBackstab = false;
+                if(enemyShip is Trebeche)
+                {
+                    attemptBackstab = true;
+                }
                 Vector2 enemyPos = Functions.screenLoopAdjust(position, enemyShip.position);
                 float toward = (enemyPos - position).ToRotation();
                 Vector2 enemyVel = enemyShip.velocity * (enemyShip.SlowTime > 0 ? 0.5f : 1);
@@ -240,31 +249,32 @@ namespace ProjectGaze.Entities.Ships
                 }
                 else
                 {
-                    /*
-                    if ((enemyPos - position).Length() < 3.7f * 15)
+                    if ((enemyPos - position).Length() < Range)
                     {
-                        AI_Kite(6.7f, 3.7f * 30);
-                    }
-                    else 
-                    */
-                    if ((enemyPos - position).Length() < 3.7f * 30)
-                    {
-                        float aimAt = Functions.PredictiveAim(position, 3.7f, enemyPos, enemyVel - velocity);
-                        if (!float.IsNaN(aimAt))
+                        
+                        if(attemptBackstab && Functions.AngularDifference((position - enemyPos).ToRotation(), enemyShip.rotation) < (float)Math.PI/2)
                         {
-                            if (AI_TurnToward(aimAt))
-                            {
-                                Controls.controlShoot[team] = true;
-                            }
+                            AI_AvoidFront(10);
                         }
                         else
                         {
-                            AI_TurnToward(toward);
+                            float aimAt = Functions.PredictiveAim(position, 3.7f, enemyPos, enemyVel - velocity);
+                            if (!float.IsNaN(aimAt))
+                            {
+                                if (AI_TurnToward(aimAt))
+                                {
+                                    AI_cShoot();
+                                }
+                            }
+                            else
+                            {
+                                AI_TurnToward(toward);
+                            }
                         }
                     }
                     else
                     {
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                         AI_TurnToward(toward);
                     }
                     if(energy == 0 && !(enemyShip is Illusioner) && !(enemyShip is Illusion))

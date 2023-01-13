@@ -1,16 +1,18 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Projectiles;
+using GazeOGL.Entities.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Ships
+namespace GazeOGL.Entities.Ships
 {
     public class Trebeche : Ship
     {
+        TrebuchetTurret turret;
+        Beam turretBeam;
         public Trebeche(Vector2 position, int team = 0) : base(position, team)
         {
             type = ShipID.Trebeche;
@@ -21,7 +23,7 @@ namespace ProjectGaze.Entities.Ships
             energy = energyCapacity;
 
             energyRate = 1;
-
+            breaks = 0.999f;
             mass = 8;
             shape = new Polygon(new Vector2[]
             {
@@ -31,6 +33,7 @@ namespace ProjectGaze.Entities.Ships
                 new Vector2(-8, 8),
                 new Vector2(3, 8),
             });
+            turret = new TrebuchetTurret(this, new Vector2(5.5f, 0), 0);
 
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
@@ -49,11 +52,16 @@ namespace ProjectGaze.Entities.Ships
                 new Line(kugPos + Functions.PolarVector(12, kug.rotation + (float)Math.PI / 2), position + Functions.PolarVector(4, rotation) + Functions.PolarVector(8, rotation + (float)Math.PI / 2)).Draw(spriteBatch, beamColor);
                 new Line(kugPos + Functions.PolarVector(12, kug.rotation + (float)Math.PI / 2), position + Functions.PolarVector(-7, rotation) + Functions.PolarVector(8, rotation + (float)Math.PI / 2)).Draw(spriteBatch, beamColor);
             }
-            spriteBatch.Draw(AssetManager.ships[10], pos, null, null, new Vector2(9f, 8.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.ships[10], pos, null, Color.White, rotation, new Vector2(9f, 8.5f), Vector2.One, SpriteEffects.None, 0f);
             if(shieldTime > 0)
             {
-                spriteBatch.Draw(AssetManager.extraEntities[3], pos, null, null, new Vector2(9f, 8.5f), rotation, Vector2.One, Color.White, 0, 0);
+                spriteBatch.Draw(AssetManager.extraEntities[3], pos, null, Color.White, rotation, new Vector2(9f, 8.5f), Vector2.One, SpriteEffects.None, 0f);
             }
+            if (turretBeam != null)
+            {
+                turretBeam.Draw(spriteBatch);
+            }
+            turret.Draw(spriteBatch, pos);
         }
         Kugelblitz kug;
         float range = 40;
@@ -74,10 +82,10 @@ namespace ProjectGaze.Entities.Ships
         int shieldTime = 0;
         public override void Special()
         {
-            if(energy >= 8 && specialCooldown <= 0)
+            if(energy >= 4 && specialCooldown <= 0)
             {
-                specialCooldown = 60;
-                energy -= 8;
+                specialCooldown = 45;
+                energy -= 4;
                 shieldTime = 30;
                 AssetManager.PlaySound(SoundID.Shield);
             }
@@ -92,7 +100,7 @@ namespace ProjectGaze.Entities.Ships
                     damageBlocked += Main.random.Next(2) == 0 ? 1 : 0;
                 }
                 damage -= damageBlocked;
-                velocity += Functions.PolarVector(damageBlocked * 2f, hitDirection);
+                velocity += Functions.PolarVector(damageBlocked * 1.2f, hitDirection);
             }
         }
         public override void LocalUpdate()
@@ -105,10 +113,10 @@ namespace ProjectGaze.Entities.Ships
             {
                 specialCooldown--;
             }
-            if ((!Controls.controlShoot[team] || range > 400) && kug != null)
+            if ((!(npcShoot || (team < 2 && Controls.controlShoot[team])) || range > 400) && kug != null)
             {
                 kug.Release(range);
-                kug.velocity = velocity;
+                //kug.velocity = velocity;
                 kug = null;
             }
             else if( kug != null)
@@ -126,17 +134,68 @@ namespace ProjectGaze.Entities.Ships
                     new Particle(position + Functions.PolarVector(-3, rotation), 10, Color.Orange);
                 }
             }
+
+            turret.UpdateRelativePosition();
+            if(DefensiveTargetting(turret.AbsolutePosition(), 40, out Entity target, 1, delegate (Entity possibleTarget)
+            {
+                Vector2 posPosition = Functions.screenLoopAdjust(turret.AbsolutePosition(), possibleTarget.position);
+                float towardPos = (posPosition - turret.AbsolutePosition()).ToRotation();
+                return Functions.AngularDifference(towardPos, rotation) < (float)Math.PI / 4f;
+            }))
+            {
+                Vector2 enemyPos = Functions.screenLoopAdjust(turret.AbsolutePosition(), target.position);
+                if(turret.AimAt(enemyPos) && turretBeam == null)
+                {
+                    turretBeam = new Beam(this, Color.Gray, 35, 30, -1, 1, 0.8f);
+                    AssetManager.PlaySound(SoundID.Pew, 0.6f);
+                }
+            }
+            else
+            {
+                turret.AimHome();
+            }
+            if(turretBeam != null && turret != null)
+            {
+                if (turretBeam.Update(turret.AbsoluteShootPosition(), turret.AbsoluteRotation()))
+                {
+                    turretBeam.ProcessCollision();
+                }
+                else
+                {
+                    turretBeam = null;
+                }
+            }
         }
         public override void AI()
         {
 
             AI_ResetControls();
             Entity enemyShip = GetEnemy();
+            bool AI_Dodging = false;
+            List<Projectile> enemyProj = EnemyProjectiles();
+            
             if(kug != null)
             {
-                Controls.controlShoot[team] = true;
+                AI_cShoot();
             }
-            if (enemyShip != null)
+            else
+            {
+                for(int i =0; i < enemyProj.Count; i++)
+                {
+                    if(enemyProj[i].velocity == Vector2.Zero || (enemyProj[i] is PsuedostableVacum))
+                    {
+                        if(AI_ImpendingCollision(enemyProj[i], 60))
+                        {
+                            AI_Dodge(enemyProj[i]);
+
+                            AI_Dodging = true;
+                            AI_cThrust();
+                        }
+                    }
+
+                }
+            }
+            if (enemyShip != null && !AI_Dodging)
             {
                 Vector2 enemyPos = Functions.screenLoopAdjust(position, enemyShip.position);
                 if (velocity.Length() < (float)maxSpeed * 0.2f * 0.9f)
@@ -147,52 +206,65 @@ namespace ProjectGaze.Entities.Ships
                 {
                     
 
-                    if (Controls.controlShoot[team])
+                    if (npcShoot || (team < 2 && Controls.controlShoot[team]))
                     {
-                        float aimAt = Functions.PredictiveAim(position, range / Kugelblitz.KugelTime, enemyPos, enemyShip.velocity - velocity);
+                        float aimAt = Functions.PredictiveAim(position, range / Kugelblitz.KugelTime, enemyPos, enemyShip.velocity);
                         if (float.IsNaN(aimAt))
                         {
-                            aimAt = Functions.PredictiveAim(position, 6, enemyPos, enemyShip.velocity - velocity);
+                            aimAt = Functions.PredictiveAim(position, 6, enemyPos, enemyShip.velocity);
                         }
                         if (!float.IsNaN(aimAt))
                         {
                             if (AI_TurnToward(aimAt))
                             {
-                                //Controls.controlShoot[team] = true;
+                                //AI_cShoot();
                             }
                         }
 
 
                         Vector2 landingPos = position + Functions.PolarVector(-2, rotation) + Functions.PolarVector(range, rotation);
                         Vector2 altEnemyPos = Functions.screenLoopAdjust(landingPos, enemyShip.position);
-                        if ((altEnemyPos - position).Length() < (Functions.PolarVector(range, rotation) + (velocity - enemyShip.velocity) * Kugelblitz.KugelTime).Length() )
+                        if ((altEnemyPos - position).Length() < (Functions.PolarVector(range, rotation) + (Vector2.Zero - enemyShip.velocity) * Kugelblitz.KugelTime).Length() )
                         {
 
-                            Controls.controlShoot[team] = false;
+                            AI_cShoot(true);
                         }
                     }
-                    else
+                    else if(enemyShip is Ship)
                     {
-                        if (AI_TurnToward((enemyPos - position).ToRotation()))
+                        float sensitivity = (float)Math.PI/2f;
+                        ShipStats.GetWeaponStats(((Ship)enemyShip).type, out _, out int enemyRange);
+                        if(enemyShip is Ship && enemyRange <= 300)
                         {
-                            Controls.controlShoot[team] = true;
+                            sensitivity = 2f * (float)Math.PI;
                         }
+                        AI_Kite(6, 600, 0, sensitivity);
                     }
                 }
 
                 if (AI_ImpendingBeamCollision(5))
                 {
-                    Controls.controlSpecial[team] = true;
+                    AI_cSpecial();
                 }
                 List<Projectile> enemyProjectiles = EnemyProjectiles();
                 for (int i = 0; i < enemyProjectiles.Count(); i++)
                 {
                     if (AI_ImpendingCollision(enemyProjectiles[i], 5) && enemyProjectiles[i].damage > 0)
                     {
-                        Controls.controlSpecial[team] = true;
+                        AI_cSpecial();
                     }
                 }
             }
+        }
+    }
+    public class TrebuchetTurret : Turret
+    {
+        public TrebuchetTurret(Entity parent, Vector2 anchorAt, float homeRotation = 0) : base(parent, anchorAt, homeRotation)
+        {
+            origin = new Vector2(1.5f, 1.5f);
+            texture = AssetManager.turrets[5];
+            turretLength = 3.5f; 
+            rotSpeed = (float)Math.PI / 30f;
         }
     }
 }

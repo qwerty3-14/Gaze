@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze
+namespace GazeOGL
 {
     public class Effect
     {
@@ -29,14 +29,14 @@ namespace ProjectGaze
                     lifeTime = 12;
                     break;
             }
-            Main.effects.Add(this);
+            Arena.effects.Add(this);
         }
         public void Update()
         {
             lifeTime--;
             if(lifeTime < 0)
             {
-                Main.effects.Remove(this);
+                Arena.effects.Remove(this);
             }
             if (id == 2)
             {
@@ -51,7 +51,7 @@ namespace ProjectGaze
         public void Draw(SpriteBatch spriteBatch)
         {
             Vector2[] offsets = Functions.OffsetsForDrawing();
-            Rectangle screenView = new Rectangle((int)Main.screenPosition.X, (int)Main.screenPosition.Y, (int)Main.CameraWorldSize, (int)Main.CameraWorldSize);
+            Rectangle screenView = new Rectangle((int)Camera.screenPosition.X, (int)Camera.screenPosition.Y, (int)Camera.CameraWorldSize, (int)Camera.CameraWorldSize);
             for (int i = 0; i < 9; i++)
             {
                 if (screenView.Contains((position + offsets[i]).ToPoint()))
@@ -63,11 +63,11 @@ namespace ProjectGaze
                         {
                             radius = 50;
                         }
-                        new Circle(Main.CameraOffset(position + offsets[i]), radius).Draw(spriteBatch, Color.Yellow);
+                        new Circle(Camera.CameraOffset(position + offsets[i]), radius).Draw(spriteBatch, Color.Yellow);
                     }
                     else
                     {
-                        spriteBatch.Draw(texture: AssetManager.effects[id], position: Main.CameraOffset(position + offsets[i]), origin: new Vector2(AssetManager.effects[id].Width, AssetManager.effects[id].Height) * .5f, color: Color.White, rotation: 0f);
+                        spriteBatch.Draw(AssetManager.effects[id], Camera.CameraOffset(position + offsets[i]), null, Color.White, 0, new Vector2(AssetManager.effects[id].Width, AssetManager.effects[id].Height) * .5f, Vector2.One, SpriteEffects.None, 0);
                     }
                 }
             }

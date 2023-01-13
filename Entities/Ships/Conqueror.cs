@@ -1,13 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Projectiles;
+using GazeOGL.Entities.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Ships
+namespace GazeOGL.Entities.Ships
 {
     public class Conqueror : Ship
     {
@@ -41,7 +41,8 @@ namespace ProjectGaze.Entities.Ships
                 AssetManager.PlaySound(SoundID.MissileLaunch);
                 energy -= 6;
                 shotCooldown = 20;
-                Projectile m = new Missile(position + Functions.PolarVector(15, rotation), Functions.PolarVector(3.2f, rotation) + velocity, team);
+                AimAssist(3.5f, 15);
+                Projectile m = new Missile(position + Functions.PolarVector(15, rotation), Functions.PolarVector(3.5f, rotation) + velocity, team);
                 m.rotation = rotation;
             }
 
@@ -99,21 +100,26 @@ namespace ProjectGaze.Entities.Ships
             }
         }
         int counter;
+        int hitDrawTime;
         public override void LocalUpdate()
         {
             shotCooldown--;
             specialCooldown--;
+            counter++;
             if (thrusting)
             {
-                counter++;
                 if (counter % 6 == 0)
                 {
-                    new Particle(position + Functions.PolarVector(-10, rotation + (float)Math.PI / 2) + Functions.PolarVector(-14, rotation), 14, Color.Orange);
-                    new Particle(position + Functions.PolarVector(10, rotation + (float)Math.PI / 2) + Functions.PolarVector(-14, rotation), 14, Color.Orange);
-                    new Particle(position + Functions.PolarVector(0, rotation + (float)Math.PI / 2) + Functions.PolarVector(-17, rotation), 14, Color.Orange);
+                    for(int i =0; i < engineCount; i++)
+                    {
+                        new Particle(position + Functions.PolarVector(engineRadius * (float)Math.Sin(((float)counter * engineRotateSpeed) + (i / (float)engineCount) * (float)Math.PI * 2f), rotation + (float)Math.PI / 2) + Functions.PolarVector(-17, rotation), 14, Color.Orange);
+                    }
                 }
             }
-
+            if(hitDrawTime >0)
+            {
+                hitDrawTime--;
+            }
 
         }
         public override void HitByProjectile(int damage)
@@ -125,29 +131,48 @@ namespace ProjectGaze.Entities.Ships
                 {
                     energy = energyCapacity;
                 }
+                hitDrawTime += damage * 30;
             }
         }
+        float engineRotateSpeed = 0.03f;
+        int engineCount = 3;
+        float engineRadius = 9f;
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.ships[1], pos, null, null, new Vector2(17.5f, 13.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.extraEntities[11], pos, null, Color.White, rotation, new Vector2(17.5f, 13.5f), Vector2.One, SpriteEffects.None, 0f);
+            
+            for(int i =0; i < engineCount; i++)
+            {
+                if((float)Math.Cos(((float)counter * engineRotateSpeed) + (i / (float)engineCount) * (float)Math.PI * 2f) > 0)
+                {
+                    spriteBatch.Draw(AssetManager.extraEntities[12], pos, null, Color.White, rotation, new Vector2(17.5f, 2.5f + engineRadius * (float)Math.Sin(((float)counter * engineRotateSpeed) + (i / (float)engineCount) * (float)Math.PI * 2f)), Vector2.One, SpriteEffects.None, 0f);
+                }
+            }
+            for(int i =0; i < engineCount; i++)
+            {
+                if((float)Math.Cos(((float)counter * engineRotateSpeed) + (i / (float)engineCount) * (float)Math.PI * 2f) <= 0)
+                {
+                    spriteBatch.Draw(AssetManager.extraEntities[12], pos, null, Color.White, rotation, new Vector2(17.5f, 2.5f + engineRadius * (float)Math.Sin(((float)counter * engineRotateSpeed) + (i / (float)engineCount) * (float)Math.PI * 2f)), Vector2.One, SpriteEffects.None, 0f);
+                }
+            }
+            if(hitDrawTime > 0)
+            {
+                spriteBatch.Draw(AssetManager.extraEntities[10], pos, null, Color.White, rotation, new Vector2(17.5f, 13.5f), Vector2.One, SpriteEffects.None, 0f);
+            }
         }
         public override void AI()
         {
-
             AI_ResetControls();
             Entity enemyShip = GetEnemy();
             if (enemyShip != null)
             {
-                AI_Kite(3.2f, 1000);
+                AI_Kite(4.5f, 1000, 15);
             }
             int incomingDamage = 0;
             List<Projectile> enemyProjectiles = EnemyProjectiles();
-            if (enemyShip is Illusion || enemyShip is Illusioner)
+            if (! (enemyShip is Illusion || enemyShip is Illusioner))
             {
-
-            }
-            else
-            {
+                //loops through enemy projectiles to calculate incomingDamage
                 for (int i = 0; i < enemyProjectiles.Count; i++)
                 {
                     if (AI_ImpendingCollision(enemyProjectiles[i], Math.Min(Math.Min(20, enemyProjectiles[i].lifeTime), enemyProjectiles[i].lifeTime)))
@@ -160,20 +185,29 @@ namespace ProjectGaze.Entities.Ships
                         {
                             incomingDamage += 4;
                         }
+                        else if (enemyProjectiles[i] is Tripwire)
+                        {
+                            incomingDamage += 12;
+                        }
+                        else if (enemyProjectiles[i] is EMP)
+                        {
+                            incomingDamage += 12;
+                        }
                         else
                         {
                             incomingDamage += enemyProjectiles[i].damage;
                         }
                     }
                 }
+
                 if (incomingDamage >= 2 && energy >= 12)
                 {
-                    Controls.controlSpecial[team] = true;
+                    AI_cSpecial();
                 }
             }
             if (energy >= 18)
             {
-                Controls.controlShoot[team] = true;
+                AI_cShoot();
             }
         }
     }

@@ -1,58 +1,72 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Ships;
+using GazeOGL.Entities.Ships;
+using GazeOGL.MyraUI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LiteNetLib;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using LiteNetLib.Utils;
 
-namespace ProjectGaze
+namespace GazeOGL
 {
     public static class Networking
     {
-		static NetServer server;
-		static NetClient client;
+		//static NetServer server;
+		//static NetClient client;
 		public static List<bool[]> incomingControls = new List<bool[]>();
 		public static bool[] myControls = null;
 		public static int framePacketSize = 4;
 		static int timeOutTimer = 0;
 		const int timeOutMax = 600;
 		static bool awaitResponse = false;
-		public static NetPeerConfiguration GetConfiguration()
-        {
-			NetPeerConfiguration config = new NetPeerConfiguration("ProjectGaze");
-			config.Port = 14242;
-			// Enable DiscoveryRequest messages
-			config.EnableMessageType(NetIncomingMessageType.DiscoveryRequest);
-
-			return config;
-		}
 		public static void StartServer()
         {
-			NetPeerConfiguration config = new NetPeerConfiguration("ProjectGaze")
-			{ Port = 12345 };
-			server = new NetServer(config);
-			server.Start();
-			Console.WriteLine("Server has started!");
+			
+			
 		}
-		static string localIP = "127.0.0.1";
-		static string IPv6 = "10.21.33.101";
-		static string remoteIP = "173.191.55.217";
 		public static void StartClient()
         {
-			NetPeerConfiguration config = new NetPeerConfiguration("ProjectGaze");
-			client = new NetClient(config);
-			client.Start();
-			client.Connect(host: remoteIP, port: 12345);
-			Console.WriteLine("Client has started!");
+			
+			
 		}
 		public static void RunServer()
 		{
+			EventBasedNetListener listener = new EventBasedNetListener();
+			NetManager server = new NetManager(listener);
+			server.Start(9050 /* port */);
+
+			listener.ConnectionRequestEvent += request =>
+			{
+				if(server.ConnectedPeersCount < 1)
+					request.AcceptIfKey("SomeConnectionKey");
+				else
+					request.Reject();
+			};
+
+			listener.PeerConnectedEvent += peer =>
+			{
+				Console.WriteLine("We got connection: {0}", peer.EndPoint); // Show peer ip
+				NetDataWriter writer = new NetDataWriter();                 // Create writer class
+				writer.Put("Hello client!");                                // Put some string
+				peer.Send(writer, DeliveryMethod.ReliableOrdered);             // Send with reliability
+			};
+
+			while (!Console.KeyAvailable)
+			{
+				server.PollEvents();
+				Thread.Sleep(15);
+			}
+			server.Stop();
 			if (!awaitResponse)
 			{
+				/*
 				if (netFrameCounter == 0 && server.Connections.Count > 0)
 				{
 					NetOutgoingMessage sendMsg = server.CreateMessage();
@@ -75,59 +89,30 @@ namespace ProjectGaze
 				{
 					netFrameCounter++;
 				}
+				*/
 			}
-			NetIncomingMessage message;
-			while ((message = server.ReadMessage()) != null)
-			{
-				switch (message.MessageType)
-				{
-					case NetIncomingMessageType.Data:
-						// handle custom messages
-						DataMessageType type = (DataMessageType)message.ReadByte();
-						switch (type)
-                        {
-							case DataMessageType.Controls:
-								if (incomingControls.Count > 0)
-								{
-									Console.WriteLine("Overflow at: " + (debugMessageCounter + 1));
-								}
-								incomingControls.Add( new bool[6]);
-								for (int i =0; i < 6; i++)
-                                {
-									incomingControls[incomingControls.Count-1][i] = message.ReadBoolean();
-								}
-								message.SkipPadBits();
-								break;
-							case DataMessageType.Disconnect:
-								Disconnect();
-								break;
-						}
-						break;
-
-					case NetIncomingMessageType.StatusChanged:
-						// handle connection status messages
-						Console.WriteLine(message.SenderConnection.Status);
-						switch (message.SenderConnection.Status)
-						{
-							case NetConnectionStatus.Connected:
-								StartupSync();
-								break;
-							case NetConnectionStatus.Disconnected:
-								Disconnect();
-								break;
-						}
-						break;
-
-					/* .. */
-					default:
-						Console.WriteLine("unhandled message with type: "
-							+ message.MessageType);
-						break;
-				}
-			}
+			// server recieve messages
 		}
 		public static void RunClient()
 		{
+			EventBasedNetListener listener = new EventBasedNetListener();
+			NetManager client = new NetManager(listener);
+			client.Start();
+			client.Connect("localhost" /* host ip or name */, 9050 /* port */, "SomeConnectionKey" /* text key or NetDataWriter */);
+			listener.NetworkReceiveEvent += (fromPeer, dataReader, channel, deliveryMethod) =>
+			{
+				Console.WriteLine("We got: {0}", dataReader.GetString(100 ));
+				dataReader.Recycle();
+			};
+
+			while (!Console.KeyAvailable)
+			{
+				client.PollEvents();
+				Thread.Sleep(15);
+			}
+
+			client.Stop();
+			/*
 			if (netFrameCounter == 0)
 			{
 				NetOutgoingMessage sendMsg = client.CreateMessage();
@@ -151,61 +136,8 @@ namespace ProjectGaze
             {
 				netFrameCounter++;
 			}
-
-			NetIncomingMessage message;
-			while ((message = client.ReadMessage()) != null)
-			{
-				switch (message.MessageType)
-				{
-					case NetIncomingMessageType.Data:
-						// handle custom messages
-						DataMessageType type = (DataMessageType)message.ReadByte();
-						switch (type)
-						{
-							case DataMessageType.Controls:
-								if(incomingControls.Count > 0)
-                                {
-									Console.WriteLine("Overflow at: " + (debugMessageCounter + 1));
-                                }
-
-								incomingControls.Add(new bool[6]);
-								for (int i = 0; i < 6; i++)
-								{
-									incomingControls[incomingControls.Count - 1][i] = message.ReadBoolean();
-								}
-								message.SkipPadBits();
-								break;
-							case DataMessageType.Disconnect:
-								Disconnect();
-								break;
-							case DataMessageType.StartQuickPlay:
-								Main.startAI[0] = message.ReadBoolean();
-								Main.startAI[1] = message.ReadBoolean();
-								message.SkipPadBits();
-								StartQuickPlay();
-								break;
-						}
-						break;
-
-					case NetIncomingMessageType.StatusChanged:
-						// handle connection status messages
-						Console.WriteLine(message.SenderConnection.Status);
-						switch(message.SenderConnection.Status)
-                        {
-							case NetConnectionStatus.Connected:
-								StartupSync();
-								break;
-							case NetConnectionStatus.Disconnected:
-								Disconnect();
-								break;
-						}
-						break;
-					default:
-						Console.WriteLine("unhandled message with type: "
-							+ message.MessageType);
-						break;
-				}
-			}
+			*/
+			//client recieves messages
 		}
 		public static int netFrameCounter = 0;
 		public static bool Update()
@@ -214,6 +146,7 @@ namespace ProjectGaze
             {
 				return false;
             }
+			/*
 			if(server != null)
             {
 				RunServer();
@@ -222,16 +155,12 @@ namespace ProjectGaze
             {
 				RunClient();
 			}
+			*/
 			if(awaitResponse)
 			{
 				return true;
 			}
-			/*
-			if(debugMessageCounter >= 30)
-            {
-				StartupSync();
-			}
-			*/
+			
 			if (netFrameCounter >= framePacketSize)
 			{
 				if (incomingControls.Count > 0)
@@ -252,7 +181,7 @@ namespace ProjectGaze
                 {
 					Disconnect();
                 }
-				Console.WriteLine("Waiting");
+				//Console.WriteLine("Waiting");
 				return true;
 
 			}
@@ -260,32 +189,14 @@ namespace ProjectGaze
         }
 		public static void Disconnect()
         {
-			if (server != null)
-			{
-				if (server.Connections.Count > 0)
-				{
-					NetOutgoingMessage sendMsg = server.CreateMessage();
-					sendMsg.Write((byte)DataMessageType.Disconnect);
-					server.SendMessage(sendMsg, server.Connections[0], NetDeliveryMethod.ReliableOrdered);
-				}
-				server.Shutdown("Server Closed");
-				server = null;
-			}
-			if (client != null)
-			{
-				NetOutgoingMessage sendMsg = client.CreateMessage();
-				sendMsg.Write((byte)DataMessageType.Disconnect);
-				client.SendMessage(sendMsg, NetDeliveryMethod.ReliableOrdered);
-				client.Disconnect("Player has left");
-				client = null;
-			}
 		}
 		public static bool IsConnected()
         {
-			return client != null || server != null;
+			return false;
         }
 		public static NetMode GetNetMode()
         {
+			/*
 			if(client != null)
             {
 				return NetMode.client;
@@ -294,12 +205,15 @@ namespace ProjectGaze
             {
 				return NetMode.server;
             }
+			*/
 			return NetMode.disconnected;
         }
 		static void StartupSync()
         {
+			Main.startAI[0] = false;
+			Main.startAI[1] = false;
 			Main.random = new Random(42);
-			Main.Start();
+			Arena.Start();
 			netFrameCounter = 1;
 			Controls.Reset();
 			debugMessageCounter = 0;
@@ -308,16 +222,31 @@ namespace ProjectGaze
 		}
 		public static void ServerStartQuickPlay()
         {
+			//tell client to start
+			StartQuickPlay();
+		}
+		public static void ServerStartFleets()
+		{
+			/*
 			if (server.Connections.Count > 0)
 			{
 				NetOutgoingMessage sendMsg = server.CreateMessage();
-				sendMsg.Write((byte)DataMessageType.StartQuickPlay);
+				sendMsg.Write((byte)DataMessageType.StartFleets);
 				sendMsg.Write(Main.startAI[0]);
 				sendMsg.Write(Main.startAI[1]);
 				sendMsg.WritePadBits();
+				FleetsManager.Repair();
+				for (int t = 0; t <2; t++)
+                {
+					for(int i =0; i <12; i++)
+                    {
+						sendMsg.Write((byte)FleetsManager.fleets[t].ships[i]);
+                    }
+                }
 				server.SendMessage(sendMsg, server.Connections[0], NetDeliveryMethod.ReliableOrdered);
 			}
-			StartQuickPlay();
+			*/
+			Main.StartFleets();
 		}
 		static void StartQuickPlay()
 		{
@@ -343,6 +272,7 @@ namespace ProjectGaze
 		Controls,
 		Disconnect,
 		StartQuickPlay,
-		ConfirmQuickPlay
+		ConfirmQuickPlay,
+		StartFleets
     }
 }

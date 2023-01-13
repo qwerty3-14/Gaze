@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     public class TrooperWave : Projectile
     {
@@ -31,7 +31,7 @@ namespace ProjectGaze.Entities.Projectiles
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[9], pos, null, null, new Vector2(2.5f, 2.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[9], pos, null, Color.White, rotation, new Vector2(2.5f, 2.5f), Vector2.One, SpriteEffects.None, 0f);
         }
         public override void Expire()
         {

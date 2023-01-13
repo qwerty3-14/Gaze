@@ -7,11 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     public class Kugelblitz : Projectile
     {
-        public const int KugelTime = 40;
+        public const int KugelTime = 45;
         public Kugelblitz(Vector2 position, Vector2 velocity, int team = 0) : base(position, velocity, team)
         {
             damage = 0;
@@ -55,8 +55,11 @@ namespace ProjectGaze.Entities.Projectiles
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[14], pos + Functions.PolarVector(outAmount, rotation + (float)Math.PI/2) + Functions.PolarVector(-curRange, rotation), null, new Rectangle(0, frame * 7, 7, 7), new Vector2(3.5f, 3.5f), rotation, Vector2.One, Color.White, 0, 0);
-            spriteBatch.Draw(AssetManager.projectiles[14], pos + Functions.PolarVector(outAmount, rotation - (float)Math.PI / 2) + Functions.PolarVector(-curRange, rotation), null, new Rectangle(0, frame * 7, 7, 7), new Vector2(3.5f, 3.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[14], pos + Functions.PolarVector(outAmount, rotation + (float)Math.PI / 2) + Functions.PolarVector(-curRange, rotation), new Rectangle(0, frame * 7, 7, 7), Color.White, rotation, new Vector2(3.5f, 3.5f), Vector2.One, SpriteEffects.None, 0f);
+            spriteBatch.Draw(AssetManager.projectiles[14], pos + Functions.PolarVector(outAmount, rotation - (float)Math.PI / 2) + Functions.PolarVector(-curRange, rotation), new Rectangle(0, frame * 7, 7, 7), Color.White, rotation, new Vector2(3.5f, 3.5f), Vector2.One, SpriteEffects.None, 0f);
+
+            //spriteBatch.Draw(AssetManager.projectiles[14], pos + Functions.PolarVector(outAmount, rotation + (float)Math.PI/2) + Functions.PolarVector(-curRange, rotation), null, new Rectangle(0, frame * 7, 7, 7), new Vector2(3.5f, 3.5f), rotation, Vector2.One, Color.White, 0, 0);
+            //spriteBatch.Draw(AssetManager.projectiles[14], pos + Functions.PolarVector(outAmount, rotation - (float)Math.PI / 2) + Functions.PolarVector(-curRange, rotation), null, new Rectangle(0, frame * 7, 7, 7), new Vector2(3.5f, 3.5f), rotation, Vector2.One, Color.White, 0, 0);
         }
 
 

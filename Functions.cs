@@ -6,18 +6,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze
+namespace GazeOGL
 {
     
     public static class Functions 
     {
         public static void ProximityExplosion(Circle explosion, int damage, int team, bool fallOff = false)
         {
-            for (int i = 0; i < Main.entities.Count; i++)
+            for (int i = 0; i < Arena.entities.Count; i++)
             {
-                if (Main.entities[i].team != team)
+                if (Arena.entities[i].team != team && !Arena.entities[i].ignoreMe)
                 {
-                    Shape[] col = Main.entities[i].AllHitboxes();
+                    Shape[] col = Arena.entities[i].AllHitboxes();
                     for (int k = 0; k < col.Length; k++)
                     {
                         if (col[k].Colliding(explosion))
@@ -25,7 +25,7 @@ namespace ProjectGaze
                             int locDamage = damage;
                             if(fallOff)
                             {
-                                Vector2 v = (Functions.screenLoopAdjust(explosion.GetPosition(), Main.entities[i].position)) - explosion.GetPosition();
+                                Vector2 v = (Functions.screenLoopAdjust(explosion.GetPosition(), Arena.entities[i].position)) - explosion.GetPosition();
                                 float dist = v.Length();
                                 if(dist < explosion.GetRadius() * 0.33f)
                                 {
@@ -37,14 +37,14 @@ namespace ProjectGaze
                                 }
 
                             }
-                            if (Main.entities[i].mass != 0)
+                            if (Arena.entities[i].mass != 0)
                             {
-                                Vector2 v = (Functions.screenLoopAdjust(explosion.GetPosition(), Main.entities[i].position)) - explosion.GetPosition();
+                                Vector2 v = (Functions.screenLoopAdjust(explosion.GetPosition(), Arena.entities[i].position)) - explosion.GetPosition();
                                 v.Normalize();
-                                v *= (locDamage * 4) / Main.entities[i].mass;
-                                Main.entities[i].velocity += v;
+                                v *= (locDamage * 4) / Arena.entities[i].mass;
+                                Arena.entities[i].velocity += v;
                             }
-                            CollisionEvent.DamagingHit(Main.entities[i], locDamage, (Functions.screenLoopAdjust(explosion.GetPosition(), Main.entities[i].position) - explosion.GetPosition()).ToRotation());
+                            CollisionEvent.DamagingHit(Arena.entities[i], locDamage, (Functions.screenLoopAdjust(explosion.GetPosition(), Arena.entities[i].position) - explosion.GetPosition()).ToRotation());
                             break;
                         }
                     }
@@ -68,13 +68,48 @@ namespace ProjectGaze
             //with this angle z we can now use the law of cosines to find time
             //the side opposite of z is equal to shootSpeed * time
             //the other sides are dist and targetSpeed * time
-            // putting these values into law of cosines gets (shootSpeed * time)^2 = (targetSpeed * time)^2 + dist^2 -2*targetSpeed*time*cos(z)
+            //putting these values into law of cosines gets (shootSpeed * time)^2 = (targetSpeed * time)^2 + dist^2 -2*targetSpeed*time*cos(z)
             //we can rearange it to (shootSpeed^2 - targetSpeed^2)time^2 + 2*targetSpeed*dist*cos(z)*time - dist^2 = 0, this is a quadratic!
 
             //here we use the quadratic formula to find time
             float a = shootSpeed * shootSpeed - targetSpeed * targetSpeed;
             float b = 2 * targetSpeed * dist * (float)Math.Cos(z);
             float c = -(dist * dist);
+            float time = (-b + (float)Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
+
+            //we now know the time allowing use to find all sides of the tirangle, now we use law of Sines to calculate the angle to shoot at.
+            float calculatedShootAngle = angleToTarget - (float)Math.Asin((targetSpeed * time * (float)Math.Sin(z)) / (shootSpeed * time));
+            return calculatedShootAngle;
+        }
+
+        /// <summary>
+        /// give an angle to shoot at to attempt to hit a moving target, returns NaN when this is impossible, includes a shoot Offest
+        /// </summary>
+        public static float PredictiveAimWithOffset(Vector2 shootFrom, float shootSpeed, Vector2 targetPos, Vector2 targetVelocity, float shootOffset)
+        {
+            float angleToTarget = (targetPos - shootFrom).ToRotation();
+            float targetTraj = targetVelocity.ToRotation();
+            float targetSpeed = targetVelocity.Length();
+            float dist = (targetPos - shootFrom).Length();
+            if (dist < shootOffset)
+            {
+                shootOffset = 0;
+            }
+
+            //imagine a tirangle between the shooter, its target and where it think the target will be in the future
+            // we need to find an angle in the triangle z this is the angle located at the target's corner
+            float z = (float)Math.PI + (targetTraj - angleToTarget);
+
+            //with this angle z we can now use the law of cosines to find time
+            //the side opposite of z is equal to shootSpeed * time
+            //the other sides are dist and targetSpeed * time
+            //putting these values into law of cosines gets (shootSpeed * time + shootOffset)^2 = (targetSpeed * time)^2 + dist^2 -2*targetSpeed*time*cos(z)
+            //we can rearange it to (shootSpeed^2 - targetSpeed^2)time^2 + (2*targetSpeed*dist*cos(z) + 2*shootOffest*shootSpeed)*time + shootOffset^2 - dist^2 = 0, this is a quadratic!
+
+            //here we use the quadratic formula to find time
+            float a = shootSpeed * shootSpeed - targetSpeed * targetSpeed;
+            float b = 2 * targetSpeed * dist * (float)Math.Cos(z) + 2 * shootOffset * shootSpeed;
+            float c = (shootOffset * shootOffset) - (dist * dist);
             float time = (-b + (float)Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
 
             //we now know the time allowing use to find all sides of the tirangle, now we use law of Sines to calculate the angle to shoot at.
@@ -90,28 +125,28 @@ namespace ProjectGaze
                 switch (i)
                 {
                     case 1:
-                        offset = Vector2.UnitX * Main.boundrySize;
+                        offset = Vector2.UnitX * Arena.boundrySize;
                         break;
                     case 2:
-                        offset = Vector2.UnitY * Main.boundrySize;
+                        offset = Vector2.UnitY * Arena.boundrySize;
                         break;
                     case 3:
-                        offset = Vector2.UnitX * -Main.boundrySize;
+                        offset = Vector2.UnitX * -Arena.boundrySize;
                         break;
                     case 4:
-                        offset = Vector2.UnitY * -Main.boundrySize;
+                        offset = Vector2.UnitY * -Arena.boundrySize;
                         break;
                     case 5:
-                        offset = Vector2.UnitX * Main.boundrySize + Vector2.UnitY * Main.boundrySize;
+                        offset = Vector2.UnitX * Arena.boundrySize + Vector2.UnitY * Arena.boundrySize;
                         break;
                     case 6:
-                        offset = Vector2.UnitY * Main.boundrySize + Vector2.UnitX * -Main.boundrySize;
+                        offset = Vector2.UnitY * Arena.boundrySize + Vector2.UnitX * -Arena.boundrySize;
                         break;
                     case 7:
-                        offset = Vector2.UnitX * -Main.boundrySize + Vector2.UnitY * -Main.boundrySize;
+                        offset = Vector2.UnitX * -Arena.boundrySize + Vector2.UnitY * -Arena.boundrySize;
                         break;
                     case 8:
-                        offset = Vector2.UnitY * -Main.boundrySize + Vector2.UnitX * Main.boundrySize;
+                        offset = Vector2.UnitY * -Arena.boundrySize + Vector2.UnitX * Arena.boundrySize;
                         break;
                 }
                 offsets[i] = offset;
@@ -122,25 +157,25 @@ namespace ProjectGaze
         {
             if (Position.X < 0)
             {
-                Position.X += Main.boundrySize;
+                Position.X += Arena.boundrySize;
             }
-            if (Position.X > Main.boundrySize)
+            if (Position.X > Arena.boundrySize)
             {
-                Position.X -= Main.boundrySize;
+                Position.X -= Arena.boundrySize;
             }
             if (Position.Y < 0)
             {
-                Position.Y += Main.boundrySize;
+                Position.Y += Arena.boundrySize;
             }
-            if (Position.Y > Main.boundrySize)
+            if (Position.Y > Arena.boundrySize)
             {
-                Position.Y -= Main.boundrySize;
+                Position.Y -= Arena.boundrySize;
             }
             return Position;
         }
         public static Vector2 screenLoopAdjust(Vector2 myPosition, Vector2 targetPosition)
         {
-            float arenaWidth = Main.boundrySize;
+            float arenaWidth = Arena.boundrySize;
             if (myPosition.X - targetPosition.X > arenaWidth / 2)
             {
                 targetPosition.X = arenaWidth + targetPosition.X;
@@ -149,7 +184,7 @@ namespace ProjectGaze
             {
                 targetPosition.X = -(arenaWidth - targetPosition.X);
             }
-            float arenaHeight = Main.boundrySize;
+            float arenaHeight = Arena.boundrySize;
             if (myPosition.Y - targetPosition.Y > arenaHeight / 2)
             {
                 targetPosition.Y = arenaHeight + targetPosition.Y;

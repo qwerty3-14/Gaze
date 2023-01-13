@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-namespace ProjectGaze.Entities.Projectiles
+using GazeOGL.Entities.Ships;
+namespace GazeOGL.Entities.Projectiles
 {
     class PalShell : Projectile
     {
@@ -22,11 +22,11 @@ namespace ProjectGaze.Entities.Projectiles
                 new Vector2(-3.5f, -1.5f)
              });
             mass = 0f;
-            lifeTime = Main.random.Next(15) + Main.random.Next(15) + 15;
+            lifeTime = Main.random.Next((int)(Palladin.Range / (3.7f * 2f))) + Main.random.Next((int)(Palladin.Range / (3.7f * 2f))) + (int)(Palladin.Range / (3.7f * 2f));
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[8], pos, null, null, new Vector2(3.5f, 1.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[8], pos, null, Color.White, rotation, new Vector2(3.5f, 1.5f), Vector2.One, SpriteEffects.None, 0f);
         }
         public override void OnKill()
         {

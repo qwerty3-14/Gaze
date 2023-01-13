@@ -7,15 +7,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze
+namespace GazeOGL
 {
     public class Circle : Shape
     {
         Vector2 position;
         float radius;
+        Polygon polyHitbox;
         public Circle(Vector2 position, float radius)
         {
             this.position = position; this.radius = radius;
+            int polySideCount = 6 + (int)(radius / 100f);
+            Vector2[] polySides = new Vector2[polySideCount];
+            for(int i =0; i < polySideCount; i++)
+            {
+                polySides[i] = Functions.PolarVector(radius, ((float)i / polySideCount) * 2f * (float)Math.PI);
+            }
+            polyHitbox = new Polygon(polySides);
+            polyHitbox.Move(position);
         }
         public Vector2 GetPosition()
         {
@@ -35,7 +44,7 @@ namespace ProjectGaze
         }
         public override bool Colliding(Polygon otherPolygon)
         {
-            return otherPolygon.Colliding(this);
+            return otherPolygon.Colliding(polyHitbox);
         }
         public override bool Colliding(Line otherLine)
         {
@@ -98,40 +107,8 @@ namespace ProjectGaze
         {
             if (radius > 0)
             {
-                spriteBatch.Draw(circleTexture, position, null, null, Vector2.One * 1000, 0, Vector2.One * (radius / 1000), color, 0, 0);
+                spriteBatch.Draw(circleTexture, position, null, color,  0, Vector2.One * 1000, Vector2.One * (radius / 1000), 0, 0);
             }
-        }
-        Texture2D d;
-        public void LegacyDraw(SpriteBatch spriteBatch, Color color)
-        {
-            if (radius > 0)
-            {
-                if (d != null)
-                {
-                    d.Dispose();
-                }
-                int size = (int)radius * 2;
-                Color[] dataColors = new Color[size * size];
-                for (int i = 0; i < size; i++)
-                {
-                    for (int j = 0; j < size; j++)
-                    {
-                        int x = i;
-                        int y = j;
-                        int centerX = (int)radius;
-                        int centerY = (int)radius;
-                        if ((new Vector2(x, y) - new Vector2(centerX, centerY)).Length() < radius)
-                        {
-                            //Debug.WriteLine((new Vector2(x, y) - new Vector2(centerX, centerY)).Length() + ", " + radius);
-                            dataColors[x + y * size] = color;
-                        }
-                    }
-                }
-                d = new Texture2D(Main.graphicsDevice, size, size);
-                d.SetData(0, null, dataColors, 0, size * size);
-                spriteBatch.Draw(d, position, null, null, Vector2.One * radius, 0, Vector2.One, Color.White, 0, 0);
-            }
-            //d.Dispose();
         }
         public override Shape Clone()
         {

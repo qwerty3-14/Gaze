@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Projectiles;
+using GazeOGL.Entities.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Ships
+namespace GazeOGL.Entities.Ships
 {
     public class Assassin : Ship
     {
@@ -41,8 +41,8 @@ namespace ProjectGaze.Entities.Ships
                 energy -= 3;
                 beams = new Beam[]
                 {
-                    new Beam(this, Color.Crimson, locRange, 10, -1, 2),
-                    new Beam(this, Color.Crimson, locRange, 10, -1, 2)
+                    new Beam(this, Color.Crimson, locRange, 15, -1, 2, 1.1f),
+                    new Beam(this, Color.Crimson, locRange, 15, -1, 2, 1.1f)
                 };
             }
         }
@@ -70,7 +70,7 @@ namespace ProjectGaze.Entities.Ships
             {
                 instaAcc = false;
             }
-            if(!Controls.controlSpecial[team])
+            if(!(npcSpecial || (team < 2 && Controls.controlSpecial[team])))
             {
                 pressedSpecial = false;
             }
@@ -83,6 +83,16 @@ namespace ProjectGaze.Entities.Ships
                 }
                 position = wormhole.position;
                 velocity = Vector2.Zero;
+                if (GetEnemy() != null)
+                {
+                    float distToEnemy = (Functions.screenLoopAdjust(position, GetEnemy().position) - position).Length();
+                    float wormDistToEnemy = (Functions.screenLoopAdjust(wormhole.position, GetEnemy().position) - wormhole.position).Length();
+                    rotation = (Functions.screenLoopAdjust(position, GetEnemy().position) - position).ToRotation();
+                    if (wormDistToEnemy > distToEnemy)
+                    {
+                        rotation += (float)Math.PI;
+                    }
+                }
                 AssetManager.PlaySound(SoundID.Warp);
                 for (int i = 0; i < 8; i++)
                 {
@@ -91,7 +101,7 @@ namespace ProjectGaze.Entities.Ships
                 }
                 instaAcc = true;
             }
-            if(wormhole != null && !Main.entities.Contains(wormhole))
+            if(wormhole != null && !Arena.entities.Contains(wormhole))
             {
                 wormhole = null;
             }
@@ -126,7 +136,7 @@ namespace ProjectGaze.Entities.Ships
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.ships[5], pos, null, null, new Vector2(6.5f, 8.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.ships[5], pos, null, Color.White, rotation, new Vector2(6.5f, 8.5f), Vector2.One, SpriteEffects.None, 0f);
             if(beams != null)
             {
                 for (int i = 0; i < 2; i++)
@@ -146,11 +156,11 @@ namespace ProjectGaze.Entities.Ships
             bool AI_Dodging = false;
             if(wormhole != null)
             {
-                Controls.controlSpecial[team] = true;
+                AI_cSpecial();
 
                 if (!AI_Dodging && AI_ImpendingBeamCollision(10))
                 {
-                    Controls.controlSpecial[team] = false;
+                    AI_cSpecial(true);
                     AI_Dodging = true;
 
                 }
@@ -165,7 +175,7 @@ namespace ProjectGaze.Entities.Ships
             });
             if(AI_CollidingWithEnemy(hitArea))
             {
-                Controls.controlShoot[team] = true;
+                AI_cShoot();
             }
             if (enemyShip == null || (enemyShip != null && (Functions.screenLoopAdjust(position, enemyShip.position) - position).Length() > 100))
             {
@@ -173,16 +183,16 @@ namespace ProjectGaze.Entities.Ships
                 {
                     if (energy >= 3 && (enemyProjectiles[i].health == 1 || enemyProjectiles[i].health == 2) && AI_CollidingWithEntitiy(enemyProjectiles[i], hitArea))
                     {
-                        Controls.controlShoot[team] = true;
+                        AI_cShoot();
                     }
                     else if (AI_ImpendingCollision(enemyProjectiles[i], 5) && wormhole != null)
                     {
-                        Controls.controlSpecial[team] = false;
+                        AI_cSpecial(true);
                         AI_Dodging = true;
                     }
                     else if (AI_ImpendingCollision(enemyProjectiles[i], 30))
                     {
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                         AI_Dodge(enemyProjectiles[i]);
                         AI_Dodging = true;
                     }
@@ -192,18 +202,6 @@ namespace ProjectGaze.Entities.Ships
             {
                 Vector2 enemyPos = Functions.screenLoopAdjust(position, enemyShip.position);
                 float toward = (enemyPos - position).ToRotation();
-                Polygon backStabArea = new Polygon(new Vector2[]
-                {
-                    enemyPos ,
-                    enemyPos + Functions.PolarVector(length, rotation) + Functions.PolarVector(-180, enemyShip.rotation - (float)Math.PI / 4f ),
-                    enemyPos + Functions.PolarVector(length, rotation) + Functions.PolarVector(-180, enemyShip.rotation + (float)Math.PI / 4f )
-                });
-                /*
-                if ((enemyPos - position).Length() > 200 && wormhole != null && (enemyPos - wormhole.position).Length() > 300)
-                {
-                    Controls.controlSpecial[team] = false;
-                }
-                */
                 if ((enemyPos - position).Length() > 200 && wormhole == null)
                 {
                     if (energy >= 18)
@@ -213,18 +211,18 @@ namespace ProjectGaze.Entities.Ships
                         {
                             if (AI_TurnToward(aimAt))
                             {
-                                Controls.controlSpecial[team] = true;
+                                AI_cSpecial();
                             }
                         }
                         else
                         {
-                            Controls.controlSpecial[team] = true;
+                            AI_cSpecial(true);
                         }
                     }
                 }
                 else
                 {
-                    Controls.controlThrust[team] = true;
+                    AI_cThrust();
 
                     if (energy > 6)
                     {
@@ -234,23 +232,24 @@ namespace ProjectGaze.Entities.Ships
                         }
                         else
                         {
-                            if ((enemyPos - position).Length() < 100 /* || ((enemyPos - position).Length() < 200 && enemyShip is Lancer) */)
+                            if ((enemyPos - position).Length() < 100)
                             {
                                 AI_TurnToward(toward);
                             }
                             else
                             {
-                                //Debug.WriteLine("Yikes!");
-                                AI_AvoidFront(100);
+                                AI_AvoidFront(80);
                             }
-                            if (wormhole == null)
+                            if (wormhole == null && !(enemyShip is Eagle))
                             {
-                                Controls.controlSpecial[team] = true;
+                                AI_cSpecial();
                             }
-                            if (wormhole != null && Functions.AngularDifference((Functions.screenLoopAdjust(wormhole.position, enemyShip.position) - wormhole.position).ToRotation(), enemyShip.rotation) < (float)Math.PI / 4f)
-                            {
-                                Controls.controlSpecial[team] = false;
-                            }
+                            
+                        }
+                        if (!(enemyShip is Strafer) && wormhole != null && ((Functions.AngularDifference((Functions.screenLoopAdjust(wormhole.position, enemyShip.position) - wormhole.position).ToRotation(), enemyShip.rotation) < (float)Math.PI / 4f)
+                                || ((Functions.screenLoopAdjust(wormhole.position, enemyShip.position) - wormhole.position).Length() < BeamRange * 5 && (Functions.screenLoopAdjust(wormhole.position, enemyShip.position) - wormhole.position).Length() < (Functions.screenLoopAdjust(wormhole.position + wormhole.velocity, enemyShip.position) - (wormhole.position + wormhole.velocity)).Length())))
+                        {
+                            AI_cSpecial(true);
                         }
                     }
                     else

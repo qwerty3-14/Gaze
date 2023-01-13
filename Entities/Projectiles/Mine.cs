@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     public class Mine : Projectile
     {
@@ -85,7 +85,7 @@ namespace ProjectGaze.Entities.Projectiles
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[13], pos, null, null, new Vector2(5.5f, 5.5f), rotation, Vector2.One, new Color(alpha, alpha, alpha, alpha), 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[13], pos, null, new Color(alpha, alpha, alpha, alpha), rotation, new Vector2(5.5f, 5.5f), Vector2.One, SpriteEffects.None, 0f);
         }
     }
 }

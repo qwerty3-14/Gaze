@@ -6,11 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     public class PsuedostableVacum : Projectile
     {
-        public PsuedostableVacum(Vector2 position, Vector2 velocity, int team = 0) : base(position, velocity, team)
+        Entity parent;
+        public PsuedostableVacum(Vector2 position, Vector2 velocity, Entity parent, int team = 0) : base(position, velocity, team)
         {
             damage = 30;
             health = 30;
@@ -25,14 +26,15 @@ namespace ProjectGaze.Entities.Projectiles
              });
             mass = 0f;
             lifeTime = 3 * 60 * 60;
+            this.parent = parent;
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[18], pos, null, null, new Vector2(8.5f, 19f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[18], pos, null, Color.White, rotation, new Vector2(8.5f, 19f), Vector2.One, SpriteEffects.None, 0f);
         }
         public override void LocalUpdate()
         {
-            if(Main.ships[team] == null)
+            if(parent == null || !Arena.entities.Contains(parent))
             {
                 Kill();
             }

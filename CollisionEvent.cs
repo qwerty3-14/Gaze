@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
-using ProjectGaze.Entities;
-using ProjectGaze.Entities.Projectiles;
-using ProjectGaze.Entities.Ships;
+using GazeOGL.Entities;
+using GazeOGL.Entities.Projectiles;
+using GazeOGL.Entities.Ships;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze
+namespace GazeOGL
 {
     public class CollisionEvent
     {
@@ -19,7 +19,7 @@ namespace ProjectGaze
         {
             this.one = one;
             this.two = two;
-            Main.CEs.Add(this);
+            Arena.CEs.Add(this);
         }
         public static bool DamagingHit(Entity victim, int damage, float hitDirection)
         {

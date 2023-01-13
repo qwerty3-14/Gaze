@@ -1,5 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using ProjectGaze.Entities.Projectiles;
+using GazeOGL.Entities.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Ships
+namespace GazeOGL.Entities.Ships
 {
     public abstract class Ship : Entity
     {
@@ -18,7 +18,7 @@ namespace ProjectGaze.Entities.Ships
         public int healthMax;
         public int maxSpeed;
         protected int acceleration;
-        protected int turnSpeed;
+        public int turnSpeed;
         protected bool thrusting;
         public ShipID type;
         protected int energyRate = 1; 
@@ -26,21 +26,35 @@ namespace ProjectGaze.Entities.Ships
         public List<int> ExtraHealths = new List<int>();
         public int EMPTime = 0;
         public bool instaAcc = false;
+        protected bool onlyCapSpeedOnThrust = false;
+        protected float breaks = 0.95f;
+
+        public bool npcThrust = false;
+        public bool npcLeft = false;
+        public bool npcRight = false;
+        public bool npcDown = false;
+        public bool npcShoot = false;
+        public bool npcSpecial = false;
+        
         public Ship(Vector2 position, int team = 0)
         {
             this.position = position;
             this.team = team;
         }
 
-        float GetAcc()
+        protected float GetAcc()
         {
             return (float)acceleration * 0.2f * (1f / 30f);
         }
-        public virtual void Thrust()
+        public virtual void Thrust(bool reverse = false)
         {
             thrusting = true;
             float s = (float)maxSpeed * 0.2f;
             float a = GetAcc();
+            if(reverse)
+            {
+                a *= -1;
+            }
             if (instaAcc)
             {
                 velocity = Functions.PolarVector(s, rotation);
@@ -50,7 +64,7 @@ namespace ProjectGaze.Entities.Ships
                 velocity += Functions.PolarVector(a, rotation);
                 if (velocity.Length() > s)
                 {
-                    velocity += Functions.PolarVector(-a, Functions.ToRotation(velocity));
+                    velocity += Functions.PolarVector(-GetAcc(), Functions.ToRotation(velocity));
                     if (velocity.Length() < s)
                     {
                         velocity.Normalize();
@@ -59,13 +73,17 @@ namespace ProjectGaze.Entities.Ships
                 }
             }
         }
+        public float GetTurnSpeed()
+        {
+            return (SlowTime > 0 ? 0.5f : 1) * (((float)turnSpeed / 15f) * 2f * (float)Math.PI) / 60f;
+        }
         public virtual void Left()
         {
-            rotation -=  (SlowTime > 0 ? 0.5f : 1) * (((float)turnSpeed / 15f) * 2f * (float)Math.PI)/60f ;
+            rotation -= GetTurnSpeed();
         }
         public virtual void Right()
         {
-            rotation += (SlowTime > 0 ? 0.5f : 1) * (((float)turnSpeed / 15f) * 2f * (float)Math.PI) / 60f;
+            rotation += GetTurnSpeed();
         }
         public virtual void Shoot()
         {
@@ -100,20 +118,86 @@ namespace ProjectGaze.Entities.Ships
                 velocity.Normalize();
                 velocity *= MAXSHIPSPEED;
             }
-            else if(velocity.Length() > (float)maxSpeed * 0.2f)
+            else if(!onlyCapSpeedOnThrust && velocity.Length() > (float)maxSpeed * 0.2f)
             {
-                velocity *= 0.95f;
+                velocity *= breaks;
             }
+        }
+        static Ship Place(ShipID shipID, int team, Vector2 position)
+        {
+            switch (shipID)
+            {
+                case ShipID.Hunter:
+                    return new Hunter(position, team);
+                case ShipID.Conqueror:
+                    return new Conqueror(position, team);
+                case ShipID.Strafer:
+                    return new Strafer(position, team);
+                case ShipID.Escort:
+                    return new Escort(position, team);
+                case ShipID.Illusioner:
+                    return new Illusioner(position, team);
+                case ShipID.Assassin:
+                    return new Assassin(position, team);
+                case ShipID.Palladin:
+                    return new Palladin(position, team);
+                case ShipID.Trooper:
+                    return new Trooper(position, team);
+                case ShipID.Eagle:
+                    return new Eagle(position, team);
+                case ShipID.Apocalypse:
+                    return new Apocalypse(position, team);
+                case ShipID.Trebeche:
+                    return new Trebeche(position, team);
+                case ShipID.Buccaneer:
+                    return new Buccaneer(position, team);
+                case ShipID.Missionary:
+                    return new Missionary(position, team);
+                case ShipID.Lancer:
+                    return new Lancer(position, team);
+                case ShipID.Mechanic:
+                    return new Mechanic(position, team);
+                case ShipID.Frigate:
+                    return new Frigate(position, team);
+                case ShipID.Brute:
+                    return new Brute(position, team);
+                case ShipID.Surge:
+                    return new Surge(position, team);
+            }
+            return null;
         }
         public static Ship Spawn(ShipID shipID, int team)
         {
             Vector2 position = Vector2.One * 100 + Vector2.One * team * 200;
             //position.X += 400 * Main.random.Next(2);
             //position.Y += 400 * Main.random.Next(2);
-            Ship enemy = Main.ships[team == 0 ? 1 : 0];
-            if (enemy != null)
+            Ship enemy = Arena.ships[team == 0 ? 1 : 0];
+            
+            if(shipID == ShipID.Count)
             {
-                position = enemy.position + Vector2.One * (Main.boundrySize * 0.4f);
+                shipID = (ShipID)Main.random.Next((int)ShipID.Count);
+            }
+            if(team >= 2)
+            {
+                position = (Camera.screenPosition + Camera.CameraWorldSize * Vector2.One) + (Arena.boundrySize / 2 * Vector2.One);
+                /*
+                position = Arena.boundrySize * 0.5f * Vector2.One;
+                float radius = Arena.boundrySize / 8;
+                if(Arena.npcsSpawned % 10 == 9)
+                {
+                    ShipStats.GetTitlesFor(shipID, out _, out string shipName);
+                    Console.WriteLine("The "+shipName+ " gang is here!!");
+                    Arena.npcs.Add(Place(shipID, team, position + Functions.PolarVector(radius, 2f * (float)Math.PI / 3f)));
+                    Arena.npcs[Arena.npcs.Count - 1].rotation = 2f * (float)Math.PI / 3f;
+                    Arena.npcs.Add(Place(shipID, team, position + Functions.PolarVector(radius, -2f * (float)Math.PI / 3f)));
+                    Arena.npcs[Arena.npcs.Count - 1].rotation = -2f * (float)Math.PI / 3f;
+                    position += Vector2.UnitX * radius;
+                }
+                */
+            }
+            else if (enemy != null)
+            {
+                position = enemy.position + Vector2.One * (Arena.boundrySize * 0.4f);
                 //position.X += Main.random.Next(-10, 11);
                 //position.Y += Main.random.Next(-10, 11);
             }
@@ -153,12 +237,18 @@ namespace ProjectGaze.Entities.Ships
                     return new Frigate(position, team);
                 case ShipID.Brute:
                     return new Brute(position, team);
+                case ShipID.Surge:
+                    return new Surge(position, team);
             }
             return null;
         }
         public override void OnKill()
         {
             AssetManager.PlaySound(SoundID.Death);
+            for(int i =0; i <1; i++)
+            {
+                Debris.DebrisSet.CreateDebris(this);
+            }
             /*
             for (int i = 0; i < 60; i++)
             {
@@ -176,6 +266,7 @@ namespace ProjectGaze.Entities.Ships
         }
         public void BaseAI()
         {
+            /*
             if(GetEnemy() != null && GetEnemy() is Missionary && !(this is Illusioner || (this is Escort && ((Escort)this).attached)))
             {
                 AI_ResetControls();
@@ -185,20 +276,39 @@ namespace ProjectGaze.Entities.Ships
                     if (AI_ImpendingCollision(deathWave, 90))
                     {
                         AI_Dodge(deathWave);
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                         if (this is Palladin)
                         {
-                            Controls.controlSpecial[team] = true;
+                            AI_cSpecial();
                         }
                         return;
                     }
                 }
             }
+            */
             AI();
         }
         public virtual void AI()
         {
 
+        }
+        public void AimAssist(float shootSpeed, float offset = 0)
+        {
+            if(GetEnemy() != null)
+            {
+                Entity enemyShip = GetEnemy();
+                Vector2 enemyPos = Functions.screenLoopAdjust(position, enemyShip.position);
+                float toward = (enemyPos - position).ToRotation();
+                Vector2 enemyVel = enemyShip.velocity * (enemyShip.SlowTime > 0 ? 0.5f : 1);
+                float aimAt = Functions.PredictiveAimWithOffset(position, shootSpeed, enemyPos, enemyVel - velocity, offset);
+                if (!float.IsNaN(aimAt))
+                {
+                    if(Functions.AngularDifference(aimAt, rotation) < GetTurnSpeed() * 2)
+                    {
+                        rotation = aimAt;
+                    }
+                }
+            }
         }
         protected void AI_Dodge(Entity entity, bool awayFromEnemy = false)
         {
@@ -206,6 +316,13 @@ namespace ProjectGaze.Entities.Ships
             float turnToRight = (entVel - velocity).ToRotation() + (float)Math.PI / 2;
             float turnToLeft = (entVel - velocity).ToRotation() - (float)Math.PI / 2;
             Entity enemyShip = GetEnemy();
+            if(entity is Kugelblitz || entity is LingeringExplosion)
+            {
+                if (AI_TurnToward((position - Functions.screenLoopAdjust(position, entity.position)).ToRotation()) && !(this is Surge))
+                {
+                    AI_cThrust();
+                }
+            }
             if (awayFromEnemy && enemyShip != null)
             {
                 
@@ -214,14 +331,14 @@ namespace ProjectGaze.Entities.Ships
                 {
                     if (AI_TurnToward(turnToRight))
                     {
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                     }
                 }
                 else
                 {
                     if (AI_TurnToward(turnToLeft))
                     {
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                     }
                 }
             }
@@ -231,39 +348,32 @@ namespace ProjectGaze.Entities.Ships
                 {
                     if (AI_TurnToward(turnToRight))
                     {
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                     }
                 }
                 else
                 {
                     if (AI_TurnToward(turnToLeft))
                     {
-                        Controls.controlThrust[team] = true;
+                        AI_cThrust();
                     }
                 }
             }
         }
         protected void AI_ResetControls()
         {
-            Controls.controlThrust[team] = false;
-            Controls.controlRight[team] = false;
-            Controls.controlLeft[team] = false;
-
-            Controls.controlShoot[team] = false;
-            Controls.controlSpecial[team] = false;
+            AI_cThrust(true);
+            AI_cRight(true);
+            AI_cLeft(true);
+            AI_cDown(true);
+            AI_cShoot(true);
+            AI_cSpecial(true);
         }
         protected void AI_Retreat(Vector2 enemyPos)
         {
-            if(GetEnemy() != null && GetEnemy() is Trebeche)
-            {
-                Controls.controlThrust[team] = true;
-                float aimAt = (enemyPos - position).ToRotation();
-                AI_TurnToward(aimAt);
-                return;
-            }
             if (velocity.Length() < maxSpeed * .2f - GetAcc() || Functions.AngularDifference(velocity.ToRotation(), (position - enemyPos).ToRotation()) > (float)Math.PI / 2f)
             {
-                Controls.controlThrust[team] = true;
+                AI_cThrust();
                 float aimAt = (position - enemyPos).ToRotation();
                 AI_TurnToward(aimAt);
             }
@@ -303,10 +413,10 @@ namespace ProjectGaze.Entities.Ships
                 }
                 AI_TurnToward(enemy.rotation + rotOffset);
                 //collisionLine = enemy.rotation + rotOffset;
-                Controls.controlThrust[team] = true;
+                AI_cThrust();
             }
         }
-        protected void AI_Kite(float shotVel, float range)
+        protected void AI_Kite(float shotVel, float range, float shootOffset = 0, float sensitivityAngle = (float)Math.PI / 2f)
         {
 
             Entity enemyShip = GetEnemy();
@@ -315,23 +425,23 @@ namespace ProjectGaze.Entities.Ships
                 Vector2 enemyPos = Functions.screenLoopAdjust(position, enemyShip.position);
                 float toward = (enemyPos - position).ToRotation();
 
-                if (velocity.Length() < (maxSpeed * 0.2f) - GetAcc() || Functions.AngularDifference(velocity.ToRotation(), (position - enemyPos).ToRotation()) > 3 * (float)Math.PI / 4f)
+                if (velocity.Length() < (maxSpeed * 0.2f) - GetAcc() || Functions.AngularDifference(velocity.ToRotation(), (position - enemyPos).ToRotation()) >  sensitivityAngle)
                 {
                     AI_Retreat(enemyPos);
                 }
                 else
                 {
-                    if(AI_AimAtEnemy(shotVel))
+                    if(AI_AimAtEnemy(shotVel, shootOffset))
                     {
                         if ((enemyPos - position).Length() < range)
                         {
-                            Controls.controlShoot[team] = true;
+                            AI_cShoot();
                         }
                     }
                 }
             }
         }
-        protected bool AI_AimAtEnemy(float shotVel)
+        protected bool AI_AimAtEnemy(float shotVel, float shootOffset = 0)
         {
             Entity enemyShip = GetEnemy();
             if (enemyShip != null)
@@ -349,7 +459,7 @@ namespace ProjectGaze.Entities.Ships
                 else
                 {
                     Vector2 enemyVel = enemyShip.velocity * (enemyShip.SlowTime > 0 ? 0.5f : 1);
-                    float aimAt = Functions.PredictiveAim(position, shotVel, enemyPos, enemyVel - velocity);
+                    float aimAt = Functions.PredictiveAimWithOffset(position, shotVel, enemyPos, enemyVel - velocity, shootOffset);
                     if (!float.IsNaN(aimAt))
                     {
                         if (AI_TurnToward(aimAt))
@@ -643,10 +753,12 @@ namespace ProjectGaze.Entities.Ships
         
         protected bool AI_TurnToward(float targetAngle)
         {
+            AI_cRight(true);
+            AI_cLeft(true);
             int f = 1; //this is used to switch rotation direction
             float actDirection = Functions.ToRotation(new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)));
             targetAngle = Functions.ToRotation(new Vector2((float)Math.Cos(targetAngle), (float)Math.Sin(targetAngle)));
-
+            
             //this makes f 1 or -1 to rotate the shorter distance
             if (Math.Abs(actDirection - targetAngle) > Math.PI)
             {
@@ -666,22 +778,22 @@ namespace ProjectGaze.Entities.Ships
                 {
                     if (f == 1)
                     {
-                        Controls.controlRight[team] = true;
+                        AI_cRight();
                     }
                     else
                     {
-                        Controls.controlLeft[team] = true;
+                        AI_cLeft();
                     }
                 }
                 else if (actDirection >= targetAngle)
                 {
                     if (f == 1)
                     {
-                        Controls.controlLeft[team] = true;
+                        AI_cLeft();
                     }
                     else
                     {
-                        Controls.controlRight[team] = true;
+                        AI_cRight();
                     }
 
                 }
@@ -690,6 +802,75 @@ namespace ProjectGaze.Entities.Ships
             //collisionLine = targetAngle;
             return false;
         }
-
+        public bool IsNPC()
+        {
+            return team >=2;
+        }
+        public void AI_cThrust(bool off = false)
+        {
+            if(IsNPC())
+            {
+                npcThrust = !off;
+            }
+            else
+            {
+                Controls.controlThrust[team] = !off;
+            }
+        }
+        public void AI_cLeft(bool off = false)
+        {
+            if(IsNPC())
+            {
+                npcLeft = !off;
+            }
+            else
+            {
+                Controls.controlLeft[team] = !off;
+            }
+        }
+        public void AI_cRight(bool off = false)
+        {
+            if(IsNPC())
+            {
+                npcRight = !off;
+            }
+            else
+            {
+                Controls.controlRight[team] = !off;
+            }
+        }
+        public void AI_cDown(bool off = false)
+        {
+            if(IsNPC())
+            {
+                npcDown = !off;
+            }
+            else
+            {
+                Controls.controlDown[team] = !off;
+            }
+        }
+        public void AI_cShoot(bool off = false)
+        {
+            if(IsNPC())
+            {
+                npcShoot = !off;
+            }
+            else
+            {
+                Controls.controlShoot[team] = !off;
+            }
+        }
+        public void AI_cSpecial(bool off = false)
+        {
+            if(IsNPC())
+            {
+                npcSpecial = !off;
+            }
+            else
+            {
+                Controls.controlSpecial[team] = !off;
+            }
+        }
     }
 }

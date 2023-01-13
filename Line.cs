@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze
+namespace GazeOGL
 {
     public class Line
     {
@@ -113,15 +113,15 @@ namespace ProjectGaze
             this.end = end;
             Rebound();
         }
-        public void Draw(SpriteBatch spriteBatch, Color color)
+        public void Draw(SpriteBatch spriteBatch, Color color, float width = 1)
         {
             Vector2[] offsets = Functions.OffsetsForDrawing();
             for (int i = 0; i < 9; i++)
             {
-                Rectangle screenView = new Rectangle((int)Main.screenPosition.X, (int)Main.screenPosition.Y, (int)Main.CameraWorldSize, (int)Main.CameraWorldSize);
+                Rectangle screenView = new Rectangle((int)Camera.screenPosition.X, (int)Camera.screenPosition.Y, (int)Camera.CameraWorldSize, (int)Camera.CameraWorldSize);
                 if (screenView.Intersects(OffsetBoundingBox(offsets[i])))
                 {
-                    spriteBatch.Draw(Main.pixel, Main.CameraOffset(start + offsets[i]), null, color, (end - start).ToRotation(), new Vector2(0, .5f), new Vector2((end - start).Length(), 1), SpriteEffects.None, 0);
+                    spriteBatch.Draw(Main.pixel, Camera.CameraOffset(start + offsets[i]), null, color, (end - start).ToRotation(), new Vector2(0, .5f), new Vector2((end - start).Length(), width), SpriteEffects.None, 0);
                 }
 
             }

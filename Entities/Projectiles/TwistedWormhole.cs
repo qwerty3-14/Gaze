@@ -1,13 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Ships;
+using GazeOGL.Entities.Ships;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     public class TwistedWormhole : Projectile
     {
@@ -29,7 +29,7 @@ namespace ProjectGaze.Entities.Projectiles
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[7], pos, null, null, new Vector2(13f, 13f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[7], pos, null, Color.White, rotation, new Vector2(13f, 13f), Vector2.One, SpriteEffects.None, 0f);
 
         }
         public override void OnHit(Entity Victim)

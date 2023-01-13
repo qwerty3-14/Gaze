@@ -1,13 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Ships;
+using GazeOGL.Entities.Ships;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     public class Grapple : Projectile
     {
@@ -86,7 +86,7 @@ namespace ProjectGaze.Entities.Projectiles
             if(stuckSpot != null)
             {
                 returning = false;
-                if (!Main.entities.Contains(stuckTo))
+                if (!Arena.entities.Contains(stuckTo))
                 {
                     previusPosition = position;
                     chainBreak();
@@ -145,11 +145,7 @@ namespace ProjectGaze.Entities.Projectiles
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[15], pos, null, null, new Vector2(1f, 2.5f), rotation, Vector2.One, Color.White, 0, 0);
-            if(parent != null)
-            {
-                
-            }
+            spriteBatch.Draw(AssetManager.projectiles[15], pos, null, Color.White, rotation, new Vector2(1.5f, 2.5f), Vector2.One, SpriteEffects.None, 0f);
         }
         public bool IsFlying()
         {

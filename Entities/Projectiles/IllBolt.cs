@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     class IllBolt : Projectile
     {
@@ -30,7 +30,7 @@ namespace ProjectGaze.Entities.Projectiles
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[6], pos, null, null, new Vector2(2.5f, 1.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[6], pos, null, Color.White, rotation, new Vector2(2.5f, 1.5f), Vector2.One, SpriteEffects.None, 0f);
         }
         public override void Expire()
         {
@@ -68,7 +68,7 @@ namespace ProjectGaze.Entities.Projectiles
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[6], pos, null, null, new Vector2(2.5f, 1.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[6], pos, null, Color.White, rotation, new Vector2(2.5f, 1.5f), Vector2.One, SpriteEffects.None, 0f);
         }
         public override void OnHit(Entity Victim)
         {

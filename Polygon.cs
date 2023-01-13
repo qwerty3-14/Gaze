@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze
+namespace GazeOGL
 {
     public class Polygon : Shape
     {
@@ -203,6 +203,16 @@ namespace ProjectGaze
         public override Rectangle GetBounds()
         {
             return boundingBox;
+        }
+        public Vector2 Center()
+        {
+            Vector2 output = Vector2.Zero;
+            for(int i =0; i < vertices.Length; i++)
+            {
+                output += vertices[i];
+            } 
+            output /= vertices.Length;
+            return output;
         }
     }
 }

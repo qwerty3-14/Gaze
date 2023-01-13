@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Projectiles;
+using GazeOGL.Entities.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Ships
+namespace GazeOGL.Entities.Ships
 {
     class Strafer : Ship
     {
@@ -53,19 +53,20 @@ namespace ProjectGaze.Entities.Ships
                 shotCooldown = 20;
                 for(int i =0; i < 4; i++)
                 {
-                    beams[i] = new Beam(this, Color.DarkCyan, BeamRange, 10, -1);
+                    beams[i] = new Beam(this, Color.DarkCyan, BeamRange, 10, -1, 1, 0.8f);
                 }
             }
         }
         int EMPCooldown;
         public override void Special()
         {
-            if (energy >= 6 && EMPCooldown <= 0)
+            if (energy >= 8 && EMPCooldown <= 0)
             {
                 EMPCooldown = 60;
                 AssetManager.PlaySound(SoundID.Pew);
                 energy -=6;
-                Projectile pelt = new EMP(position + Functions.PolarVector(2, rotation), velocity + Functions.PolarVector(7, rotation), team);
+                AimAssist(6f, 2);
+                Projectile pelt = new EMP(position + Functions.PolarVector(2, rotation), velocity + Functions.PolarVector(6, rotation), team);
                 pelt.rotation = rotation;
             }
         }
@@ -148,7 +149,7 @@ namespace ProjectGaze.Entities.Ships
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.ships[2], pos, null, null, new Vector2(7.5f, 5.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.ships[2], pos, null, Color.White, rotation, new Vector2(7.5f, 5.5f), Vector2.One, SpriteEffects.None, 0f);
             for (int i = 0; i < 4; i++)
             {
                 if (beams[i] != null)
@@ -161,12 +162,24 @@ namespace ProjectGaze.Entities.Ships
                 turrets[i].Draw(spriteBatch, pos);
             }
         }
+        bool AI_CheckForEMP()
+        {
+            foreach(Entity entity in Arena.entities)
+            {
+                if(entity.team == team && entity is EMP)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         bool AI_Dodging = false;
         public override void AI()
         {
             AI_Dodging = false;
             AI_ResetControls();
             Entity enemyShip = GetEnemy();
+            AI_cThrust();
             Polygon hitArea = new Polygon(new Vector2[]
                     {
                     position + Functions.PolarVector(BeamRange + 10, rotation),
@@ -189,7 +202,7 @@ namespace ProjectGaze.Entities.Ships
                         {
                             if (AI_CollidingWithEntitiy(enemyProjectiles[i], hitArea))
                             {
-                                Controls.controlShoot[team] = true;
+                                AI_cShoot();
                             }
                         }
                         else if (AI_ImpendingCollision(enemyProjectiles[i], Math.Min(60, enemyProjectiles[i].lifeTime)))
@@ -203,7 +216,7 @@ namespace ProjectGaze.Entities.Ships
                 {
 
                     Vector2 enemyPos = Functions.screenLoopAdjust(position, enemyShip.position);
-                    if (Functions.AngularDifference((enemyPos - position).ToRotation(), rotation) > (float)Math.PI / 4f)
+                    if (Functions.AngularDifference((enemyPos - position).ToRotation(), rotation) > (float)Math.PI / 4f && SlowTime <= 0)
                     {
 
                         Vector2[] offsets = Functions.OffsetsForDrawing();
@@ -224,14 +237,18 @@ namespace ProjectGaze.Entities.Ships
                     }
                     else
                     {
-                        if( (enemyPos - position).Length() > 3 * Main.boundrySize / 8)
+                        if(SlowTime >0)
                         {
-                            float aimAt = Functions.PredictiveAim(position + Functions.PolarVector(2, rotation), 7, enemyPos, enemyShip.velocity - velocity);
+                            AI_cThrust(true);
+                        }
+                        if((enemyShip is Ship) && ((((Ship)enemyShip).energy > 0) || ((Ship)enemyShip).EMPTime < 30))
+                        {
+                            float aimAt = Functions.PredictiveAimWithOffset(position, 6, enemyPos, enemyShip.velocity - velocity, 2);
                             if (!float.IsNaN(aimAt))
                             {
-                                if (AI_TurnToward(aimAt) && energy == energyCapacity)
+                                if (AI_TurnToward(aimAt) && energy == energyCapacity && !AI_CheckForEMP())
                                 {
-                                    Controls.controlSpecial[team] = true;
+                                    AI_cSpecial();
                                 }
                             }
                         }
@@ -255,10 +272,9 @@ namespace ProjectGaze.Entities.Ships
                 }
                 if (AI_CollidingWithEnemy(hitArea))
                 {
-                    Controls.controlShoot[team] = true;
+                    AI_cShoot();
                 }
             }
-            Controls.controlThrust[team] = true;
         }
     }
     class StraferTurret : Turret

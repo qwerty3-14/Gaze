@@ -5,8 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GazeOGL.Entities.Ships;
 
-namespace ProjectGaze.Entities.Projectiles
+namespace GazeOGL.Entities.Projectiles
 {
     public class Inq : Projectile
     {
@@ -23,11 +24,11 @@ namespace ProjectGaze.Entities.Projectiles
                 new Vector2(-3.5f, -1.5f)
              });
             mass = 0f;
-            lifeTime = 40;
+            lifeTime = (int)(Missionary.range / Missionary.vel);
         }
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.projectiles[17], pos, null, null, new Vector2(3.5f, 1.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.projectiles[17], pos, null, Color.White, rotation, new Vector2(3.5f, 1.5f), Vector2.One, SpriteEffects.None, 0f);
         }
         public override void Expire()
         {

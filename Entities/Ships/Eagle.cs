@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Projectiles;
+using GazeOGL.Entities.Projectiles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities.Ships
+namespace GazeOGL.Entities.Ships
 {
     public class Eagle : Ship
     {
@@ -41,13 +41,13 @@ namespace ProjectGaze.Entities.Ships
         }
         public override void Shoot()
         {
-            if(shotCooldown <=0 && energy > 3)
+            if(shotCooldown <=0 && energy > 2)
             {
                 Entity enemyShip = GetEnemy();
                 if(enemyShip != null)
                 {
-                    energy -= 3;
-                    shotCooldown = 30;
+                    energy -= 2;
+                    shotCooldown = 24;
                     Vector2 shotPosLeft = position + Functions.PolarVector(6, rotation - (float)Math.PI / 2f);
                     Vector2 shotPosRight = position + Functions.PolarVector(6, rotation + (float)Math.PI / 2f);
                     Vector2 enemyPos = Functions.screenLoopAdjust(position, enemyShip.position);
@@ -62,7 +62,7 @@ namespace ProjectGaze.Entities.Ships
                         shootFrom = shotPosRight;
                         frame = 1;
                     }
-                    float shotSpeed = 4f;
+                    float shotSpeed = 4.6f;
                     float aimAt = Functions.PredictiveAim(shootFrom, shotSpeed, enemyPos, enemyShip.velocity - velocity);
                     if(float.IsNaN(aimAt))
                     {
@@ -77,7 +77,15 @@ namespace ProjectGaze.Entities.Ships
         public const int EagletHealth = 4;
         public override void Special()
         {
-            if (shotCooldown <= 0 && energy == energyCapacity && (eaglets[0] == null || eaglets[1] == null))
+            int eagletsGone = 0;
+            for (int i = 0; i < eaglets.Length; i++)
+            {
+                if (eaglets[i] == null)
+                {
+                    eagletsGone++;
+                }
+            }
+            if (shotCooldown <= 0 && energy == energyCapacity && eagletsGone > 0)
             {
                 for (int i = 0; i < eaglets.Length; i++)
                 {
@@ -100,7 +108,7 @@ namespace ProjectGaze.Entities.Ships
             {
                 shotCooldown--;
             }
-            if(shotCooldown < 15)
+            if(shotCooldown < 10)
             {
                 frame = 0;
             }
@@ -108,7 +116,7 @@ namespace ProjectGaze.Entities.Ships
             ExtraHealths.Clear();
             for (int i = 0; i < eaglets.Length; i++)
             {
-                if (eaglets[i] != null && !Main.entities.Contains(eaglets[i]))
+                if (eaglets[i] != null && !Arena.entities.Contains(eaglets[i]))
                 {
                     eaglets[i] = null;
                     break;
@@ -123,9 +131,13 @@ namespace ProjectGaze.Entities.Ships
         int frame = 0;
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.extraEntities[1], pos, null, new Rectangle(0, frame * 23, 13, 23), new Vector2(7.5f, 11.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.extraEntities[1], pos, new Rectangle(0, frame * 23, 13, 23), Color.White, rotation, new Vector2(7.5f, 11.5f), Vector2.One, SpriteEffects.None, 0f);
+            //spriteBatch.Draw(AssetManager.extraEntities[1], pos, null, new Rectangle(0, frame * 23, 13, 23), new Vector2(7.5f, 11.5f), rotation, Vector2.One, Color.White, 0, 0);
         }
         bool AI_Dodging = false;
+        float aoeDodgeAlert = 0;
+        
+        float recentEnemyRot = 0;
         public override void AI()
         {
             AI_Dodging = false;
@@ -133,35 +145,64 @@ namespace ProjectGaze.Entities.Ships
             List<Projectile> enemyProj = EnemyProjectiles();
             for(int i =0; i < enemyProj.Count; i++)
             {
-                if(AI_ImpendingCollision(enemyProj[i], 45))
+                if(AI_ImpendingCollision(enemyProj[i], 45) || (enemyProj[i] is Kugelblitz && aoeDodgeAlert > 0))
                 {
-                    Controls.controlThrust[team] = true;
-                    AI_Dodge(enemyProj[i]);
+                    if(enemyProj[i] is Kugelblitz)
+                    {
+                        AI_TurnToward(recentEnemyRot + 3f * (float)Math.PI/8f);
+                    }
+                    else
+                    {
+                        AI_Dodge(enemyProj[i]);
+                    }
+                    AI_cThrust();
+                    aoeDodgeAlert = 60;
                     AI_Dodging = true;
                     break;
                 }
             }
+            aoeDodgeAlert--;
             Entity enemyShip = GetEnemy();
             if (enemyShip != null)
             {
+                
                 Vector2 enemyPos = Functions.screenLoopAdjust(position, enemyShip.position);
+                recentEnemyRot = enemyShip.rotation;
                 if (!AI_Dodging)
                 {
-                    if (eaglets[0] == null || eaglets[1] == null)
+                    int eagletsGone =0;
+                    for(int i = 0; i < eaglets.Length; i++)
                     {
-                        Controls.controlSpecial[team] = true;
+                        if(eaglets[i] == null)
+                        {
+                            eagletsGone++;
+                        }
+                    }
+                    if (eagletsGone > 0)
+                    {
+                        AI_cSpecial();
                         AI_Retreat(enemyPos);
                     }
+                    else if(enemyShip is Ship && ((Ship)enemyShip).GetTurnSpeed() * (enemyPos - position).Length() > maxSpeed * 0.2f)
+                    {
+                        AI_AimAtEnemy(maxSpeed * 0.2f);
+                        AI_cThrust();
+                        AI_cShoot(true);
+                    }
+                    
                     else
                     {
-                        AI_AvoidFront( SlowTime == 0 ? 100 : 50 );
+                        AI_AvoidFront(20);
                     }
+                    
                 }
                 if ((enemyPos - position).Length() < 180)
                 {
-                    Controls.controlShoot[team] = true;
+                    AI_cShoot();
                 }
             }
+
+            //Console.WriteLine(Controls.controlLeft[team] + ", " + Controls.controlRight[team]);
         }
     }
     public class Eaglet : Entity
@@ -193,7 +234,7 @@ namespace ProjectGaze.Entities.Ships
         int shotCooldown;
         public override void LocalUpdate()
         {
-            if(!Main.entities.Contains(parent))
+            if(!Arena.entities.Contains(parent))
             {
                 Kill();
             }
@@ -234,7 +275,7 @@ namespace ProjectGaze.Entities.Ships
 
         public override void LocalDraw(SpriteBatch spriteBatch, Vector2 pos)
         {
-            spriteBatch.Draw(AssetManager.extraEntities[2], pos, null, null, new Vector2(2, 2.5f), rotation, Vector2.One, Color.White, 0, 0);
+            spriteBatch.Draw(AssetManager.extraEntities[2], pos, null, Color.White, rotation, new Vector2(2f, 2.5f), Vector2.One, SpriteEffects.None, 0f);
         }
     }
 

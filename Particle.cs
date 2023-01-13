@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze
+namespace GazeOGL
 {
     public class Particle
     {
@@ -18,7 +18,7 @@ namespace ProjectGaze
             this.Position = Position;
             this.timeLeft = timeLeft;
             this.color = color;
-            Main.particles.Add(this);
+            Arena.particles.Add(this);
         }
         public Particle(Vector2 Position, int timeLeft, Color color, Vector2 velocity)
         {
@@ -26,13 +26,13 @@ namespace ProjectGaze
             this.timeLeft = timeLeft;
             this.color = color;
             this.velocity = velocity;
-            Main.particles.Add(this);
+            Arena.particles.Add(this);
         }
         public Particle(Vector2 Position, int timeLeft)
         {
             this.Position = Position;
             this.timeLeft = timeLeft;
-            Main.particles.Add(this);
+            Arena.particles.Add(this);
         }
         public void Update()
         {
@@ -40,7 +40,7 @@ namespace ProjectGaze
             timeLeft--;
             if (timeLeft == 0)
             {
-                Main.particles.Remove(this);
+                Arena.particles.Remove(this);
             }
         }
     }

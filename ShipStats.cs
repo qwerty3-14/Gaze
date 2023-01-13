@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze
+namespace GazeOGL
 {
     public static class ShipStats
     {
@@ -20,7 +20,7 @@ namespace ProjectGaze
             switch (type)
             {
                 case ShipID.Hunter:
-                    health = 11;
+                    health = 10;
                     energyMax = 15;
                     energyGen = 4;
                     acceleration = 9;
@@ -33,18 +33,18 @@ namespace ProjectGaze
                     energyGen = 2;
                     acceleration = 4;
                     maxSpeed = 6;
-                    turnSpeed = 4;
+                    turnSpeed = 5;
                     break;
                 case ShipID.Strafer:
-                    health = 6;
-                    energyMax = 5;
+                    health = 4;
+                    energyMax = 4;
                     energyGen = 4;
                     acceleration = 15;
                     maxSpeed = 15;
                     turnSpeed = 3;
                     break;
                 case ShipID.Escort:
-                    health = 5;
+                    health = alt ? 11 : 5;
                     energyMax = 12;
                     energyGen = 2;
                     acceleration = alt ?  3 : 10;
@@ -88,8 +88,8 @@ namespace ProjectGaze
                     energyMax = 6;
                     energyGen = 3;
                     acceleration = 15;
-                    maxSpeed = 8;
-                    turnSpeed = 11;
+                    maxSpeed = 9;
+                    turnSpeed = 14;
                     break;
                 case ShipID.Apocalypse:
                     health = 13;
@@ -100,9 +100,9 @@ namespace ProjectGaze
                     turnSpeed = 4;
                     break;
                 case ShipID.Trebeche:
-                    health = 9;
-                    energyMax = 12;
-                    energyGen = 3;
+                    health = 7;
+                    energyMax = 10;
+                    energyGen = 2;
                     acceleration = 8;
                     maxSpeed = 7;
                     turnSpeed = 4;
@@ -119,12 +119,12 @@ namespace ProjectGaze
                     health = 15;
                     energyMax = 15;
                     energyGen = 6;
-                    acceleration = 9;
+                    acceleration = 7;
                     maxSpeed = 8;
-                    turnSpeed = 12;
+                    turnSpeed = 7;
                     break;
                 case ShipID.Lancer:
-                    health = 9;
+                    health = 8;
                     energyMax = 12;
                     energyGen = 4;
                     acceleration = 10;
@@ -132,7 +132,7 @@ namespace ProjectGaze
                     turnSpeed = 10;
                     break;
                 case ShipID.Mechanic:
-                    health = 5;
+                    health = 6;
                     energyMax = 4;
                     energyGen = 2;
                     acceleration = 14;
@@ -151,9 +151,97 @@ namespace ProjectGaze
                     health = 5;
                     energyMax = 8;
                     energyGen = 3;
-                    acceleration = 5;
+                    acceleration = 9;
                     maxSpeed = 8;
-                    turnSpeed = 10;
+                    turnSpeed = 11;
+                    break;
+                case ShipID.Surge:
+                    health = 9;
+                    energyMax = 5;
+                    energyGen = 4;
+                    acceleration = 12;
+                    maxSpeed = 7;
+                    turnSpeed = 3;
+                    break;
+            }
+        }
+        public static void GetWeaponStats(ShipID type, out int damage, out int range, bool alt = false)
+        {
+            damage = 0;
+            range = 0;
+            switch (type)
+            {
+                case ShipID.Hunter:
+                    damage = 10;
+                    range = 6;
+                    break;
+                case ShipID.Conqueror:
+                    damage = 15;
+                    range = 15;
+                    break;
+                case ShipID.Strafer:
+                    damage = 9;
+                    range = 2;
+                    break;
+                case ShipID.Escort:
+                    damage = alt ? 12 : 6;
+                    range = alt ? 6 : 4;
+                    break;
+                case ShipID.Illusioner:
+                    damage = 4;
+                    range = 10;
+                    break;
+                case ShipID.Assassin:
+                    damage = 15;
+                    range = 1;
+                    break;
+                case ShipID.Palladin:
+                    damage = 15;
+                    range = 4;
+                    break;
+                case ShipID.Trooper:
+                    damage = 8;
+                    range = 15;
+                    break;
+                case ShipID.Eagle:
+                    damage = 5;
+                    range = 6;
+                    break;
+                case ShipID.Apocalypse:
+                    damage = 11;
+                    range = 11;
+                    break;
+                case ShipID.Trebeche:
+                    damage = 10;
+                    range = 15;
+                    break;
+                case ShipID.Buccaneer:
+                    damage = 12;
+                    range = 1;
+                    break;
+                case ShipID.Missionary:
+                    damage = 15;
+                    range = 8;
+                    break;
+                case ShipID.Lancer:
+                    damage = 3;
+                    range = 6;
+                    break;
+                case ShipID.Mechanic:
+                    damage = 6;
+                    range = 6;
+                    break;
+                case ShipID.Frigate:
+                    damage = 12;
+                    range = 15;
+                    break;
+                case ShipID.Brute:
+                    damage = 15;
+                    range = 5;
+                    break;
+                case ShipID.Surge:
+                    damage = 6;
+                    range = 4;
                     break;
             }
         }
@@ -182,11 +270,11 @@ namespace ProjectGaze
                 case ShipID.Apocalypse:
                     return AssetManager.ui[13];
                 case ShipID.Trebeche:
-                    return AssetManager.ships[10];
+                    return AssetManager.extraEntities[14];
                 case ShipID.Buccaneer:
                     return AssetManager.ui[14];
                 case ShipID.Missionary:
-                    return AssetManager.ships[12];
+                    return AssetManager.ui[17];
                 case ShipID.Lancer:
                     return AssetManager.ships[13];
                 case ShipID.Mechanic:
@@ -195,6 +283,8 @@ namespace ProjectGaze
                     return AssetManager.ships[15];
                 case ShipID.Brute:
                     return AssetManager.ships[16];
+                case ShipID.Surge:
+                    return AssetManager.ui[16];
             }
             return null;
         }
@@ -272,29 +362,78 @@ namespace ProjectGaze
                     race = "Lasque";
                     ship = "Brute";
                     break;
+                case ShipID.Surge:
+                    race = "Vuu-Vii-Vaa";
+                    ship = "Surge";
+                    break;
 
             }
+        }
+        public static int GetScore(ShipID type)
+        {
+            switch (type)
+            {
+                case ShipID.Hunter:
+                    return 21;
+                case ShipID.Conqueror:
+                    return 25+2;
+                case ShipID.Strafer:
+                    return 9;
+                case ShipID.Escort:
+                    return 23;
+                case ShipID.Illusioner:
+                    return 11;
+                case ShipID.Assassin:
+                    return 21-6;
+                case ShipID.Palladin:
+                    return 30;
+                case ShipID.Trooper:
+                    return 11;
+                case ShipID.Eagle:
+                    return 12;
+                case ShipID.Apocalypse:
+                    return 24;
+                case ShipID.Trebeche:
+                    return 11;
+                case ShipID.Buccaneer:
+                    return 10;
+                case ShipID.Missionary:
+                    return 30;
+                case ShipID.Lancer:
+                    return 17;
+                case ShipID.Mechanic:
+                    return 5+2;
+                case ShipID.Frigate:
+                    return 20;
+                case ShipID.Brute:
+                    return 10;
+                case ShipID.Surge:
+                    return 19-1;
+            }
+            return 0;
         }
     }
     public enum ShipID : byte
     {
         Mechanic,
-        Strafer,
-        Trooper,
         Buccaneer,
+        Eagle,
+        Frigate,
+        Escort,
+        Palladin,
+        Brute,
+        Trooper,
+        Assassin,
+        Surge,
+        Hunter,
+        Conqueror,
+        Strafer,
         Illusioner,
         Trebeche,
         Lancer,
-        Eagle,
-        Frigate,
-        Assassin,
-        Hunter,
-        Escort,
         Apocalypse,
-        Palladin,
-        Conqueror,
         Missionary,
-        Brute,
+        Count
 
     }
 }

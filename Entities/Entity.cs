@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProjectGaze.Entities.Projectiles;
-using ProjectGaze.Entities.Ships;
+using GazeOGL.Entities.Projectiles;
+using GazeOGL.Entities.Ships;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectGaze.Entities
+namespace GazeOGL.Entities
 {
     public abstract class Entity
     {
@@ -21,16 +21,17 @@ namespace ProjectGaze.Entities
         public int team;
         public float mass = 10f;
         public int StunTime = 0;
-        public int SlowTime = 2;
+        public int SlowTime = 0;
         public float? collisionLine = null;
         public const float MAXSPEED = 11;
         public bool invulnerable = false;
         public int incorpreal = 0;
         public bool noHurtOnCollision = false;
         public bool DrawOnTop = false;
+        public bool ignoreMe = false;
         public Entity()
         {
-            Main.entities.Add(this);
+            Arena.entities.Add(this);
         }
         public Shape Hitbox()
         {
@@ -57,40 +58,40 @@ namespace ProjectGaze.Entities
         {
             List<Shape> returnList = new List<Shape>();
             returnList.Add(Hitbox());
-            if(returnList[0].Colliding(Main.boundryLines[0]))
+            if(returnList[0].Colliding(Arena.boundryLines[0]))
             {
-                returnList.Add(Hitbox(Vector2.UnitY * Main.boundrySize));
+                returnList.Add(Hitbox(Vector2.UnitY * Arena.boundrySize));
                 //top left corner
-                if (returnList[0].Colliding(Main.boundryLines[3]))
+                if (returnList[0].Colliding(Arena.boundryLines[3]))
                 {
-                    returnList.Add(Hitbox(new Vector2(1, 1) * Main.boundrySize));
+                    returnList.Add(Hitbox(new Vector2(1, 1) * Arena.boundrySize));
                 }
             }
-            if (returnList[0].Colliding(Main.boundryLines[1]))
+            if (returnList[0].Colliding(Arena.boundryLines[1]))
             {
-                returnList.Add(Hitbox(Vector2.UnitX * -Main.boundrySize));
+                returnList.Add(Hitbox(Vector2.UnitX * -Arena.boundrySize));
                 //top Right Corner
-                if (returnList[0].Colliding(Main.boundryLines[0]))
+                if (returnList[0].Colliding(Arena.boundryLines[0]))
                 {
-                    returnList.Add(Hitbox(new Vector2(-1, 1) * Main.boundrySize));
+                    returnList.Add(Hitbox(new Vector2(-1, 1) * Arena.boundrySize));
                 }
             }
-            if (returnList[0].Colliding(Main.boundryLines[2]))
+            if (returnList[0].Colliding(Arena.boundryLines[2]))
             {
-                returnList.Add(Hitbox(Vector2.UnitY * -Main.boundrySize));
+                returnList.Add(Hitbox(Vector2.UnitY * -Arena.boundrySize));
                 //bottom right corner
-                if (returnList[0].Colliding(Main.boundryLines[1]))
+                if (returnList[0].Colliding(Arena.boundryLines[1]))
                 {
-                    returnList.Add(Hitbox(new Vector2(-1, -1) * Main.boundrySize));
+                    returnList.Add(Hitbox(new Vector2(-1, -1) * Arena.boundrySize));
                 }
             }
-            if (returnList[0].Colliding(Main.boundryLines[3]))
+            if (returnList[0].Colliding(Arena.boundryLines[3]))
             {
-                returnList.Add(Hitbox(Vector2.UnitX * Main.boundrySize));
+                returnList.Add(Hitbox(Vector2.UnitX * Arena.boundrySize));
                 //bottom left corner
-                if (returnList[0].Colliding(Main.boundryLines[2]))
+                if (returnList[0].Colliding(Arena.boundryLines[2]))
                 {
-                    returnList.Add(Hitbox(new Vector2(1, -1) * Main.boundrySize));
+                    returnList.Add(Hitbox(new Vector2(1, -1) * Arena.boundrySize));
                 }
             }
             //Debug.WriteLine(returnList.Count);
@@ -140,21 +141,21 @@ namespace ProjectGaze.Entities
                     position += velocity;
                 }
             }
-            if(position.X > Main.boundrySize)
+            if(position.X > Arena.boundrySize)
             {
-                position.X -= Main.boundrySize;
+                position.X -= Arena.boundrySize;
             }
             if(position.X < 0)
             {
-                position.X += Main.boundrySize;
+                position.X += Arena.boundrySize;
             }
-            if (position.Y > Main.boundrySize)
+            if (position.Y > Arena.boundrySize)
             {
-                position.Y -= Main.boundrySize;
+                position.Y -= Arena.boundrySize;
             }
             if (position.Y < 0)
             {
-                position.Y += Main.boundrySize;
+                position.Y += Arena.boundrySize;
             }
             LocalUpdate();
             ModerateUpdate();
@@ -172,10 +173,10 @@ namespace ProjectGaze.Entities
             Vector2[] offsets = Functions.OffsetsForDrawing();
             for (int i = 0; i < 9; i++)
             {
-                Rectangle screenView = new Rectangle((int)Main.screenPosition.X, (int)Main.screenPosition.Y, (int)Main.CameraWorldSize, (int)Main.CameraWorldSize);
+                Rectangle screenView = new Rectangle((int)Camera.screenPosition.X, (int)Camera.screenPosition.Y, (int)Camera.CameraWorldSize, (int)Camera.CameraWorldSize);
                 if (screenView.Intersects(Hitbox(offsets[i]).GetBounds()))
                 {
-                    LocalDraw(spriteBatch, Main.CameraOffset( position + offsets[i]));
+                    LocalDraw(spriteBatch, Camera.CameraOffset( position + offsets[i]));
                     
                 }
 
@@ -187,7 +188,7 @@ namespace ProjectGaze.Entities
         }
         public void Kill()
         {
-            Main.entities.Remove(this);
+            Arena.entities.Remove(this);
             OnKill();
         }
         public virtual void OnKill()
@@ -197,37 +198,49 @@ namespace ProjectGaze.Entities
         protected List<Projectile> EnemyProjectiles()
         {
             List<Projectile> proj = new List<Projectile>();
-            for (int i = 0; i < Main.entities.Count; i++)
+            for (int i = 0; i < Arena.entities.Count; i++)
             {
-                if (Main.entities[i].team != team && Main.entities[i] is Projectile)
+                if (Arena.entities[i].team != team && Arena.entities[i] is Projectile)
                 {
-                    if(Main.entities[i] is Mine)
+                    if(Arena.entities[i] is Mine)
                     {
-                        if(((Mine)Main.entities[i]).alpha > 0)
+                        if(((Mine)Arena.entities[i]).alpha > 0)
                         {
-                            proj.Add((Projectile)Main.entities[i]);
+                            proj.Add((Projectile)Arena.entities[i]);
                         }
                     }
-                    else if(Main.entities[i] is Grapple)
+                    else if(Arena.entities[i] is Grapple)
                     {
-                        if(!((Grapple)Main.entities[i]).IsStuck())
+                        if(!((Grapple)Arena.entities[i]).IsStuck())
                         {
-                            proj.Add((Projectile)Main.entities[i]);
+                            proj.Add((Projectile)Arena.entities[i]);
                         }
                     }
                     else
                     {
-                        proj.Add((Projectile)Main.entities[i]);
+                        proj.Add((Projectile)Arena.entities[i]);
                     }
                 }
             }
             return proj;
         }
-
+        
         protected Entity GetEnemy()
         {
             //add some code here if enemy is illusioner
-            Ship enemy = Main.ships[team == 0 ? 1 : 0];
+            Ship enemy = Arena.ships[team == 0 ? 1 : 0];
+            if(Arena.npcs.Count > 0)
+            {
+                float dist = enemy == null ? 2000 : (Functions.screenLoopAdjust(position, enemy.position) - position).Length();
+                for(int i =0; i < Arena.npcs.Count; i++)
+                {
+                    if(Arena.npcs[i].team != team && (Functions.screenLoopAdjust(position, Arena.npcs[i].position) - position).Length() < dist)
+                    {
+                        enemy = Arena.npcs[i];
+                        dist = (Functions.screenLoopAdjust(position, enemy.position) - position).Length();
+                    }
+                }
+            }
             if(enemy is Illusioner)
             {
                 List<Entity> illusionAndCo = new List<Entity>();
@@ -281,14 +294,14 @@ namespace ProjectGaze.Entities
             {
                 return true;
             }
-            for (int i = 0; i < Main.entities.Count; i++)
+            for (int i = 0; i < Arena.entities.Count; i++)
             {
-                if (Main.entities[i].team != team && !(Main.entities[i] is Projectile) && specialCondition(Main.entities[i]))
+                if (Arena.entities[i].team != team && !(Arena.entities[i] is Projectile) && specialCondition(Arena.entities[i] ) && !Arena.entities[i].ignoreMe)
                 {
-                    Vector2 entityPos = Functions.screenLoopAdjust(center, Main.entities[i].position);
+                    Vector2 entityPos = Functions.screenLoopAdjust(center, Arena.entities[i].position);
                     if ((entityPos - center).Length() < range)
                     {
-                        targetThis = Main.entities[i];
+                        targetThis = Arena.entities[i];
                         return true;
                     }
                 }
@@ -305,14 +318,14 @@ namespace ProjectGaze.Entities
                 specialCondition = delegate (Entity possibleTarget) { return true; };
             }
 
-            for (int i = 0; i < Main.entities.Count; i++)
+            for (int i = 0; i < Arena.entities.Count; i++)
             {
-                if (Main.entities[i].team != team && !(Main.entities[i] is Projectile) && specialCondition(Main.entities[i]))
+                if (Arena.entities[i].team != team && !(Arena.entities[i] is Projectile) && specialCondition(Arena.entities[i]) && !Arena.entities[i].ignoreMe)
                 {
-                    Vector2 entityPos = Functions.screenLoopAdjust(center, Main.entities[i].position);
+                    Vector2 entityPos = Functions.screenLoopAdjust(center, Arena.entities[i].position);
                     if ((entityPos - center).Length() < range)
                     {
-                        targetThis = Main.entities[i];
+                        targetThis = Arena.entities[i];
                         return true;
                     }
                 }
